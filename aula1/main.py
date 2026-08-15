@@ -35,8 +35,7 @@ if response.status_code == 200:
             
             with open(caminho_arquivo, 'w', encoding='utf-8') as f:
                 json.dump(dados_para_salvar, f, ensure_ascii=False, indent=4)
-                
-            print(f"✅ Arquivo salvo: {nome_arquivo}")
+           
             
     print(f"\nTodos os 9 arquivos foram gerados com sucesso na pasta:\n{diretorio_atual}")
 

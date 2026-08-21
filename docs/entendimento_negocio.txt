@@ -1,0 +1,33 @@
+Etapa 1:
+- numero de chamados por região
+- categorias mais recorentes
+- sazonalidade de ocorrencias 
+- regiões com maior frequencia de categorias 
+- idades com maior frequencia de ocorrencias
+
+Etapas 2 e 3: Entendimento e Preparação dos Dados
+Mapeamento de colunas disponíveis (data, hora, local, perfil do paciente, motivo)
+
+Levantamento do volume total de registros do ano de 2026
+
+Tratamento de linhas com idades vazias (decisão entre excluir ou usar média)
+
+Padronização de textos e correção de nomes de bairros
+
+Separação das colunas de dia, mês e hora para facilitar cruzamentos
+
+Etapa 4: Modelagem
+Cruzamento de volume de chamados por categoria e por bairro
+
+Identificação de horários de pico e dias da semana mais críticos
+
+Criação de tabelas de resumo numérico das ocorrências
+
+Elaboração de gráficos e zonas de calor (hotspots)
+
+Etapas 5 e 6: Avaliação e Implantação
+Auditoria dos dados para exclusão de valores impossíveis (ex: datas irreais ou idades negativas)
+
+Validação se os gráficos respondem aos tópicos levantados na Etapa 1
+
+Construção de um dashboard visual e interativo

@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<!--[if IE 9]> <html lang="pt_BR" class="ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html lang="pt_BR"  > <!--<![endif]-->
+  <head>
+    <meta charset="utf-8" />
+      <meta name="csrf_field_name" content="_csrf_token" />
+      <meta name="_csrf_token" content="IjRiYWRhNjhlMmQwZjRjMTAyNDYzMWNjZTRhNmVmNjljOTIyM2M1NTMi.apAmNA.I0kySj-2BtfZCgt6PcCVdqkcp88" />
+
+      <meta name="generator" content="ckan 2.11.5" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-N0RCR0EQ81"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-N0RCR0EQ81');
+    </script>
+
+    <title>Serviço de Atendimento Móvel de Urgência - SAMU 2018 - Solicitações de Atendimento 2018 - Portal de Dados Abertos da Prefeitura do Recife</title>
+
+    
+    <link rel="shortcut icon" href="/base/images/favicon.ico" />
+    
+    
+      
+      
+      
+    
+    
+
+
+    
+    <link href="/webassets/base/bd7580b4_main.css" rel="stylesheet"/>
+<link href="/webassets/ckanext-geoview/f197a782_geo-resource-styles.css" rel="stylesheet"/>
+    
+    
+  
+  <meta property="og:title" content="Serviço de Atendimento Móvel de Urgência - SAMU 2018 - Solicitações de Atendimento 2018 - Portal de Dados Abertos da Prefeitura do Recife">
+  <meta property="og:description" content="Este recurso descreve as solicitações de atendimento recebidas pelo SAMU no ano 2018">
+
+
+  </head>
+
+  
+  <body data-site-root="https://dados.recife.pe.gov.br:443/" data-locale-root="https://dados.recife.pe.gov.br:443/" >
+
+    
+    <div class="visually-hidden-focusable"><a href="#content">Ir para o conteúdo principal</a></div>
+  
+
+  
+    
+
+ 
+<div class="account-masthead">
+  <div class="container">
+     
+    <nav class="account not-authed" aria-label="Conta">
+      <ul class="list-unstyled">
+        
+    
+        <li><a href="/user/login">Entrar</a></li>
+         
+    
+    <li>
+      <a href="/contact" title="Fale conosco">
+        
+           Contato
+        
+      </a>
+    </li>
+
+
+      </ul>
+    </nav>
+     
+  </div>
+</div>
+
+<header class="masthead">
+  <div class="container">
+      
+    <nav class="navbar navbar-expand-lg navbar-light">
+      <hgroup class="header-image navbar-left">
+
+      
+      
+      <a class="logo" href="/">
+        <img src="https://statics.recife.pe.gov.br/images/ckan/Logo_Dados_Recife_branca.svg" alt="Portal de Dados Abertos da Prefeitura do Recife"
+          title="Portal de Dados Abertos da Prefeitura do Recife" />
+      </a>
+      
+      
+
+       </hgroup>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#main-navigation-toggle"
+        aria-controls="main-navigation-toggle" aria-expanded="false" aria-label="Alternar navegação">
+        <span class="fa fa-bars text-white"></span>
+      </button>
+
+      <div class="main-navbar collapse navbar-collapse" id="main-navigation-toggle">
+        <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+          
+            
+              
+              
+
+              <li><a href="/dataset/">Conjuntos de dados</a></li><li><a href="/organization/">Organizações</a></li><li><a href="/group/">Grupos</a></li>
+
+                <li>
+                  <a href="https://hubdedados.recife.pe.gov.br/visualizacoes" target="_blank" title="Visualizações">Visualizações</a>
+                </li>
+                <li>
+                  <a href="/contact" title="Fale conosco">Contato</a>
+                </li>
+
+            
+          </ul>
+
+      
+      
+          <form class="d-flex site-search" action="/dataset/" method="get">
+              <label class="d-none" for="field-sitewide-search">Pesquisar conjuntos de dados...</label>
+              <input id="field-sitewide-search" class="form-control me-2"  type="text" name="q" placeholder="Pesquisar" aria-label="Pesquisar conjuntos de dados..."/>
+              <button class="btn" type="submit" aria-label="Enviar"><i class="fa fa-search"></i></button>
+          </form>
+      
+      </div>
+    </nav>
+  </div>
+</header>
+
+  
+    <div class="main">
+      <div id="content" class="container">
+        
+          
+            <div class="flash-messages">
+              
+                
+              
+            </div>
+          
+
+          
+            <div class="toolbar" role="navigation" aria-label="Rastro de navegação">
+              
+                
+                  <ol class="breadcrumb">
+                    
+<li class="home"><a href="/" aria-label="Início"><i class="fa fa-home"></i><span> Início</span></a></li>
+                    
+  
+  
+    
+    
+      
+      
+      <li><a href="/organization/">Organizações</a></li>
+      <li><a href="/organization/secretaria-de-saude" title="Secretaria de Saúde">Secretaria de Saúde</a></li>
+    
+    <li><a href="/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018" title="Serviço de Atendimento Móvel de Urgência - SAMU 2018">Serviço de Atendimento...</a></li>
+  
+
+  <li class="active"><a href="" title="Solicitações de Atendimento 2018">Solicitações de Atendimento 2018</a></li>
+
+                  </ol>
+                
+              
+            </div>
+          
+
+          <div class="row wrapper">
+            
+            
+  
+    <section class="module module-resource" role="complementary">
+      
+      <div class="module-content">
+        <div class="actions">
+          
+            <ul class="d-flex flex-wrap gap-1 justify-content-end">
+              
+  
+                
+                  
+                
+            
+              <li>
+                <div class="btn-group">
+                <a class="btn btn-primary resource-url-analytics" href="https://dados.recife.pe.gov.br:443/dataset/2e6bc527-ece8-438d-9f95-fc66ab363853/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488/download/solicitacoes-de-atendimento-2018.csv">
+                  
+                    <i class="fa fa-arrow-circle-down"></i> Baixar
+                  
+                </a>
+                
+
+
+                </div>
+              </li>
+            
+            
+  
+
+          </ul>
+          
+        </div>
+        
+          <h1 class="page-heading" title="Solicitações de Atendimento 2018">Solicitações de Atendimento 2018</h1>
+          
+            
+              <p class="text-muted ellipsis">URL: <a class="resource-url-analytics" href="https://dados.recife.pe.gov.br:443/dataset/2e6bc527-ece8-438d-9f95-fc66ab363853/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488/download/solicitacoes-de-atendimento-2018.csv" title="https://dados.recife.pe.gov.br:443/dataset/2e6bc527-ece8-438d-9f95-fc66ab363853/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488/download/solicitacoes-de-atendimento-2018.csv">https://dados.recife.pe.gov.br:443/dataset/2e6bc527-ece8-438d-9f95-fc66ab363853/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488/download/solicitacoes-de-atendimento-2018.csv</a></p>
+            
+          
+          <div class="prose notes" property="rdfs:label">
+            
+              <p>Este recurso descreve as solicitações de atendimento recebidas pelo SAMU no ano 2018</p>
+            
+            
+          </div>
+        
+      
+      
+        
+          
+        
+          
+            <div class="resource-view">
+              
+                
+                <div class="data-viewer-info">
+                  <p>Não há visões criadas para este recurso ainda.</p>
+                  
+                </div>
+              
+            </div>
+          
+        </div>
+      
+      
+      
+    </section>
+  
+
+
+            
+              <aside class="secondary col-md-3">
+                
+                
+
+  
+    
+
+
+
+  
+    <section class="module module-narrow resources">
+      
+        
+          <h2 class="module-heading"><i class="fa fa-bars"></i> Recursos</h2>
+        
+        
+          <ul class="list-unstyled nav nav-simple">
+            
+              
+              
+                <li class="nav-item active">
+                  <a href="#" title="Solicitações de Atendimento 2018">Solicitações de...</a>
+                </li>
+              
+            
+              
+              
+                <li class="nav-item">
+                  <a href="/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/6bf21761-0e0c-4ebf-9613-7070c7500069" title="Dicionário de Dados - Chamados Samu 2018">Dicionário de Dados -...</a>
+                </li>
+              
+            
+          </ul>
+        
+      
+    </section>
+  
+
+
+
+  
+
+  
+    
+
+  <section class="module module-narrow social">
+    
+      <h2 class="module-heading"><i class="fa fa-share-square"></i> Social</h2>
+    
+    
+      <ul class="nav nav-simple">
+        <li class="nav-item"><a href="https://twitter.com/share?url=https://dados.recife.pe.gov.br:443/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" target="_blank"><i class="fa-brands fa-twitter-square"></i> Twitter</a></li>
+        <li class="nav-item"><a href="https://www.facebook.com/sharer.php?u=https://dados.recife.pe.gov.br:443/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" target="_blank"><i class="fa-brands fa-facebook-square"></i> Facebook</a></li>
+      </ul>
+    
+  </section>
+
+  
+
+              </aside>
+            
+
+            
+              <div class="primary col-md-9 col-xs-12" role="main">
+                
+                
+  
+    
+      <section class="module">
+        
+  
+  
+        <div class="module-content">
+          <h2>Informações Adicionais</h2>
+          <table class="table table-striped table-bordered table-condensed" data-module="table-toggle-more">
+            <thead>
+              <tr>
+                <th scope="col">Campo</th>
+                <th scope="col">Valor</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">Dados atualizados pela última vez</th>
+                <td>6 de março de 2026</td>
+              </tr>
+              <tr>
+                <th scope="row">Metadados atualizados pela última vez</th>
+                <td>6 de março de 2026</td>
+              </tr>
+              <tr>
+                <th scope="row">Criado</th>
+                <td>6 de março de 2026</td>
+              </tr>
+              <tr>
+                <th scope="row">Formato</th>
+                <td>CSV</td>
+              </tr>
+              <tr>
+                <th scope="row">Licença</th>
+                <td>
+
+
+  
+    
+  
+    <a href="http://www.opendefinition.org/licenses/odc-odbl" rel="dc:rights">Open Data Commons Open Database License (ODbL)</a>
+  
+
+  
+</td>
+              </tr>
+              
+                
+              
+                
+                  <tr class="toggle-more"><th scope="row">Datastore active</th><td>False</td></tr>
+                
+              
+                
+              
+                
+                  <tr class="toggle-more"><th scope="row">Has views</th><td>False</td></tr>
+                
+              
+                
+                  <tr class="toggle-more"><th scope="row">Id</th><td>9a6b851c-b63c-4cba-b3ff-0fb86d4b0488</td></tr>
+                
+              
+                
+              
+                
+              
+                
+                  <tr class="toggle-more"><th scope="row">Mimetype</th><td>text/csv</td></tr>
+                
+              
+                
+                  <tr class="toggle-more"><th scope="row">Package id</th><td>2e6bc527-ece8-438d-9f95-fc66ab363853</td></tr>
+                
+              
+                
+                  <tr class="toggle-more"><th scope="row">Position</th><td>0</td></tr>
+                
+              
+                
+                  <tr class="toggle-more"><th scope="row">Resource type</th><td>file.upload</td></tr>
+                
+              
+                
+                  <tr class="toggle-more"><th scope="row">Size</th><td>22,5 MiB</td></tr>
+                
+              
+                
+                  <tr class="toggle-more"><th scope="row">State</th><td>active</td></tr>
+                
+              
+                
+                  <tr class="toggle-more"><th scope="row">Url type</th><td>upload</td></tr>
+                
+              
+            </tbody>
+          </table>
+        </div>
+        
+
+      </section>
+    
+  
+
+              </div>
+            
+          </div>
+        
+      </div>
+    </div>
+  
+    <footer class="site-footer">
+  <div class="container">
+    
+    <!-- Primeira linha: 4 colunas -->
+    <div class="row pb-3">
+      <!-- Coluna 1: O Portal -->
+      <div class="col-md-3 footer-links-recife">
+        <h2>O Portal</h2>
+        <ul class="list-unstyled">
+          <li><a href="/pages/sobre">Sobre o Portal</a></li>
+          <li><a href="/base/doc/recife/padrao_de_servico_de_dados_da_prefeitura_da_cidade_de_recife.pdf" target="_blank">Padrão de Serviço de Dados da Prefeitura da Cidade de Recife</a></li>
+          <li><a href="/base/doc/recife/padroes_de_publicacao_dos_dados_no_portal_de_dados_abertos_do_recife.pdf" target="_blank">Padrões de Publicação dos Dados no
+Portal de Dados Abertos do Recife</a></li>
+          <li><a href="/base/doc/recife/plano_de_dados_abertos_do_recife.pdf" target="_blank">Política de Dados Abertos da Prefeitura do Recife</a></li>
+          <li><a href="/base/doc/recife/sistematica_de_atualizacao_de_dados_do_portal_de_dados_abertos_da_prefeitura_do_recife.pdf" target="_blank">Sistemática de Atualização de Dados do Portal de Dados Abertos do Recife</a></li>
+          <li><a href="https://hubdedados.recife.pe.gov.br/visualizacoes" target="_blank" rel="noopener">Visualizações de Dados</a></li>
+          <li><a href="/pages/perguntas-frequentes">Perguntas Frequentes</a></li>
+          <li><a href="/pages/agradecimentos">Agradecimentos</a></li>
+        </ul>
+      </div>
+      
+      <!-- Coluna 2: Manuais e Vídeos -->
+      <div class="pt-md-0 pt-3 col-md-3 footer-links-recife">
+        <h2>Manuais e Vídeos</h2>
+        <ul class="list-unstyled">
+          <li><a href="http://www.w3c.br/pub/Materiais/PublicacoesW3C/Manual_Dados_Abertos_WEB.pdf" target="_blank" rel="noopener">Manual de Dados Abertos W3C</a></li>
+          <li><a href="http://www.w3c.br/pub/Materiais/PublicacoesW3C/manual_dados_abertos_desenvolvedores_web.pdf" target="_blank" rel="noopener">Manual do desenvolvedor W3C</a></li>
+          <li><a href="http://www.w3c.br/pub/Materiais/PublicacoesW3C/encarte_manual_desenvolvedores_web.pdf" target="_blank" rel="noopener">Cartilha do desenvolvedor W3C</a></li>
+          <li><a href="https://opendatahandbook.org/guide/pt_BR" target="_blank" rel="noopener">Guia de Dados Abertos OKFN</a></li>
+          <li><a href="/pages/dados-abertos-para-um-dia-a-dia-melhor">Dados Abertos para um dia a dia melhor</a></li>
+        </ul>
+      </div>
+      
+      <!-- Coluna 3: Links de Interesse -->
+      <div class="pt-md-0 pt-3 col-md-3 footer-links-recife">
+        <h2>Links de Interesse</h2>
+        <ul class="list-unstyled">
+          <li><a href="https://hubdedados.recife.pe.gov.br" target="_blank" rel="noopener">Hub de Dados Recife</a></li>
+          <li><a href="https://inovacaoaberta.recife.pe.gov.br" target="_blank" rel="noopener">Inovação Aberta Recife</a></li>
+          <li><a href="https://transparencia.recife.pe.gov.br" target="_blank" rel="noopener">Portal da Transparência Recife</a></li>
+          <li><a href="https://hackercidadao.recife.pe.gov.br" target="_blank" rel="noopener">Hacker Cidadão Recife</a></li>
+          <li><a href="https://dados.gov.br" target="_blank" rel="noopener">Dados Abertos Governo Federal</a></li>
+          <li><a href="https://dados.pe.gov.br" target="_blank" rel="noopener">Dados Abertos Pernambuco</a></li>
+        </ul>
+      </div>
+
+      <!-- Coluna 4: Saiba mais -->
+      <div class="pt-md-0 pt-3 col-md-3 footer-links-recife">
+        <h2>Saiba mais</h2>
+        <ul class="list-unstyled">
+          <li><a href="/pages/dados-abertos">O que são dados abertos?</a></li>
+          <li><a href="https://www.gov.br/acessoainformacao/pt-br" target="_blank" rel="noopener">Lei de acesso a informação</a></li>
+          <li><a href="https://www.opengovpartnership.org" target="_blank" rel="noopener">Parceria para Governo Aberto</a></li>
+          <li><a href="http://www.okfn.org" target="_blank" rel="noopener">Open Knowledge Foundation</a></li>
+          <li><a href="https://opendatacommons.org" target="_blank" rel="noopener">Open Data Commons</a></li>
+          <li><a href="https://www.opendefinition.org/od" target="_blank" rel="noopener">Open Data Definition</a></li>
+          <li><a href="https://www.ckan.org/" target="_blank" rel="noopener">Associação CKAN</a></li>
+          
+          <li><a href="https://docs.ckan.org/en/2.11/api/" target="_blank" rel="noopener">API do CKAN</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Segunda linha: 2 colunas -->
+    <div class="row">
+      <div class="col-md-4 attribution text-md-start text-center">
+        
+          <p><strong>Powered by</strong> <a class="hide-text ckan-footer-logo" href="https://ckan.org" target="_blank" rel="noopener">CKAN</a></p>
+        
+        
+          
+<form class="lang-select" action="/util/redirect" data-module="select-switch" method="POST">
+  
+<input type="hidden" name="_csrf_token" value="IjRiYWRhNjhlMmQwZjRjMTAyNDYzMWNjZTRhNmVmNjljOTIyM2M1NTMi.apAmNA.I0kySj-2BtfZCgt6PcCVdqkcp88"/> 
+  <div class="form-group">
+    <label for="field-lang-select">Idioma</label>
+    <select id="field-lang-select" name="url" data-module="autocomplete" data-module-dropdown-class="lang-dropdown" data-module-container-class="lang-container">
+      
+        <option value="/pt_BR/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" selected="selected">
+          português (Brasil)
+        </option>
+      
+        <option value="/en/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          English
+        </option>
+      
+        <option value="/am/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          አማርኛ
+        </option>
+      
+        <option value="/ar/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          العربية
+        </option>
+      
+        <option value="/bg/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          български
+        </option>
+      
+        <option value="/bs/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          bosanski
+        </option>
+      
+        <option value="/ca/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          català
+        </option>
+      
+        <option value="/cs_CZ/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          čeština (Česko)
+        </option>
+      
+        <option value="/da_DK/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          dansk (Danmark)
+        </option>
+      
+        <option value="/de/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          Deutsch
+        </option>
+      
+        <option value="/el/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          Ελληνικά
+        </option>
+      
+        <option value="/en_AU/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          English (Australia)
+        </option>
+      
+        <option value="/en_GB/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          English (United Kingdom)
+        </option>
+      
+        <option value="/es/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          español
+        </option>
+      
+        <option value="/es_AR/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          español (Argentina)
+        </option>
+      
+        <option value="/eu/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          euskara
+        </option>
+      
+        <option value="/fa_IR/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          فارسی (ایران)
+        </option>
+      
+        <option value="/fi/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          suomi
+        </option>
+      
+        <option value="/fr/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          français
+        </option>
+      
+        <option value="/gl/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          galego
+        </option>
+      
+        <option value="/gl_ES/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          galego (España)
+        </option>
+      
+        <option value="/he/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          עברית
+        </option>
+      
+        <option value="/hr/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          hrvatski
+        </option>
+      
+        <option value="/hu/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          magyar
+        </option>
+      
+        <option value="/id/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          Indonesia
+        </option>
+      
+        <option value="/is/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          íslenska
+        </option>
+      
+        <option value="/it/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          italiano
+        </option>
+      
+        <option value="/ja/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          日本語
+        </option>
+      
+        <option value="/km/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          ខ្មែរ
+        </option>
+      
+        <option value="/ko_KR/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          한국어 (대한민국)
+        </option>
+      
+        <option value="/lt/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          lietuvių
+        </option>
+      
+        <option value="/lv/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          latviešu
+        </option>
+      
+        <option value="/mk/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          македонски
+        </option>
+      
+        <option value="/mn_MN/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          монгол (Монгол)
+        </option>
+      
+        <option value="/my_MM/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          မြန်မာ (မြန်မာ)
+        </option>
+      
+        <option value="/nb_NO/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          norsk bokmål (Norge)
+        </option>
+      
+        <option value="/ne/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          नेपाली
+        </option>
+      
+        <option value="/nl/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          Nederlands
+        </option>
+      
+        <option value="/no/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          norsk
+        </option>
+      
+        <option value="/pl/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          polski
+        </option>
+      
+        <option value="/pt_PT/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          português (Portugal)
+        </option>
+      
+        <option value="/ro/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          română
+        </option>
+      
+        <option value="/ru/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          русский
+        </option>
+      
+        <option value="/sk/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          slovenčina
+        </option>
+      
+        <option value="/sl/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          slovenščina
+        </option>
+      
+        <option value="/sq/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          shqip
+        </option>
+      
+        <option value="/sr/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          српски
+        </option>
+      
+        <option value="/sr_Latn/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          srpski (latinica)
+        </option>
+      
+        <option value="/sv/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          svenska
+        </option>
+      
+        <option value="/th/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          ไทย
+        </option>
+      
+        <option value="/tl/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          Filipino (Pilipinas)
+        </option>
+      
+        <option value="/tr/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          Türkçe
+        </option>
+      
+        <option value="/uk/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          українська
+        </option>
+      
+        <option value="/uk_UA/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          українська (Україна)
+        </option>
+      
+        <option value="/vi/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          Tiếng Việt
+        </option>
+      
+        <option value="/zh_Hans_CN/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          中文 (简体, 中国)
+        </option>
+      
+        <option value="/zh_Hant_TW/dataset/servico-de-atendimento-movel-de-urgencia-samu-2018/resource/9a6b851c-b63c-4cba-b3ff-0fb86d4b0488" >
+          中文 (繁體, 台灣)
+        </option>
+      
+    </select>
+  </div>
+  <button class="btn btn-default d-none " type="submit">Ir</button>
+</form>
+
+
+        
+      </div>
+      <div class="col-md-4 attribution text-center">
+        <a class="hide-text" href="https://www.recife.pe.gov.br" title="Prefeitura da Cidade do Recife" target="_blank" rel="noopener">
+          <img class="img-pcr-rodape" src="https://statics.recife.pe.gov.br/images/dynamics/logo_gestao_pcr_negativa.png?w=170&fit=fill" alt="Prefeitura da Cidade do Recife" />
+        </a>
+      </div>
+      <div class="col-md-4 attribution text-end emprel-logo-container">
+        <a class="hide-text" href="https://www.emprel.gov.br" title="Desenvolvimento pela Emprel" target="_blank" rel="noopener">
+          <img class="img-emprel-rodape" src="/base/images/recife/emprel.png" alt="Emprel - Empresa Municipal de Informática" />
+        </a>
+      </div>
+    </div>
+    
+  </div>
+</footer>
+  
+  
+  
+  
+  
+    
+
+  
+
+    
+    <link href="/webassets/vendor/f3b8236b_select2.css" rel="stylesheet"/>
+<link href="/webassets/vendor/53df638c_fontawesome.css" rel="stylesheet"/>
+<link href="/webassets/ckanext_datastore/08c583c6_datastore.css" rel="stylesheet"/>
+    <script src="/webassets/vendor/240e5086_jquery.js" type="text/javascript"></script>
+<script src="/webassets/vendor/773d6354_vendor.js" type="text/javascript"></script>
+<script src="/webassets/vendor/6d1ad7e6_bootstrap.js" type="text/javascript"></script>
+<script src="/webassets/vendor/529a0eb7_htmx.js" type="text/javascript"></script>
+<script src="/webassets/base/a65ea3a0_main.js" type="text/javascript"></script>
+<script src="/webassets/base/b1def42f_ckan.js" type="text/javascript"></script>
+<script src="/webassets/ckanext_datastore/59ce3294_datastore.js" type="text/javascript"></script>
+
+    <!-- Início - Configuração do VLibras -->
+    <div vw class="enabled">
+      <div vw-access-button class="active"></div>
+      <div vw-plugin-wrapper>
+        <div class="vw-plugin-top-wrapper"></div>
+      </div>
+    </div>
+    <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
+    <script>
+      new window.VLibras.Widget('https://vlibras.gov.br/app');
+    </script>
+    <!-- Fim - Configuração do VLibras -->
+
+  </body>
+</html>

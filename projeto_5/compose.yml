@@ -1,0 +1,27 @@
+services:
+  metabase:
+    image: metabase/metabase:latest
+    container_name: metabase
+    ports:
+      - "3000:3000"
+    volumes:
+      # Pasta local onde ficam salvas as configurações do Metabase
+      # (usuários, conexões de banco, dashboards). Sem isso, você
+      # perderia tudo ao recriar o container.
+      - ./metabase-data:/metabase-data
+    environment:
+      # Diz ao Metabase para gravar seu banco interno (H2) na pasta persistida
+      MB_DB_FILE: /metabase-data/metabase.db
+      # Fuso horário dos relatórios
+      TZ: America/Recife
+    # Reinicia o Metabase automaticamente sempre que o Docker Desktop abrir
+    restart: unless-stopped
+
+    # comando para executar o metabase
+
+    # docker compose up -d      # liga o Metabase
+    # docker compose stop       # desliga (mantém dados)
+    # docker compose logs -f    # ver logs ao vivo (Ctrl+C sai)
+    # docker compose ps         # ver se está rodando
+    # docker compose pull && docker compose up -d   # atualizar o Metabase
+    # docker compose up -d

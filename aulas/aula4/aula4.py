@@ -1,6 +1,7 @@
 import io
 import requests
 import pandas as pd
+import numpy as np
 
 url = "https://servicodados.ibge.gov.br/api/v3/agregados/4093/periodos/201201-202602/variaveis/4099?localidades=N3[26]&classificacao=2[all]"
 
@@ -37,7 +38,19 @@ for sexo in sexos:
     moda = valores.mode()[0]
     mediana = valores.median()
     media = valores.mean()
+    variancia = valores.var()
+    desvio = valores.std()
+    asimetria = valores.skew()
+    curtose = valores.kurtosis()
+
     print(f"\n{sexo}")
     print("Moda:", moda)
     print("Mediana:", mediana)
     print("Média:", media)
+    print("Variancia:",variancia)
+    print("desvio padrao", desvio)
+    print("amplitudo", valores.max()-valores.min())
+    print("Asimetria", asimetria)
+    print("Curtose", curtose)
+
+

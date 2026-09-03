@@ -1,0 +1,7 @@
+1. Introdução: Objetivos e Perguntas de Pesquisa
+
+O presente estudo analisa a evolução da taxa de desocupação no estado de Pernambuco entre o primeiro trimestre de 2012 e o segundo trimestre de 2026, a partir dos microdados agregados da Pesquisa Nacional por Amostra de Domicílios Contínua (PNAD Contínua), do IBGE. O problema investigado é relevante porque Pernambuco historicamente apresenta taxas de desocupação superiores à média nacional, e porque o período analisado abrange eventos econômicos marcantes, como a recessão de 2015–2016 e a pandemia de Covid-19, que impactaram fortemente o mercado de trabalho.
+
+O objetivo geral do trabalho é caracterizar estatisticamente a taxa de desocupação pernambucana ao longo do tempo. Como objetivos específicos, definem-se: (i) comparar o comportamento da desocupação entre homens e mulheres; (ii) identificar padrões temporais, como picos e períodos de recuperação; e (iii) avaliar como as decisões de tratamento dos dados (por exemplo, a substituição de valores não numéricos) afetam as medidas estatísticas calculadas.
+
+Três perguntas norteiam a análise: Qual o impacto do tratamento de dados ausentes na média calculada da taxa de desocupação? Existem diferenças significativas entre a desocupação de homens e mulheres em Pernambuco? A distribuição das taxas ao longo dos anos é simétrica ou apresenta concentração em determinados patamares?

@@ -31,3 +31,6 @@ Auditoria dos dados para exclusão de valores impossíveis (ex: datas irreais ou
 Validação se os gráficos respondem aos tópicos levantados na Etapa 1
 
 Construção de um dashboard visual e interativo
+
+
+# Olhar pysus para dados da cadeira de projetos e de dados 

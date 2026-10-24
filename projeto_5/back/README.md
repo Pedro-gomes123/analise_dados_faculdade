@@ -14,22 +14,33 @@ O app grava os próprios dados no schema `app`. Os dados climáticos chegam no s
 Todos os comandos rodam nesta pasta (`projeto_5/back`). Atenção: o `compose.yml` de `projeto_5/` é o da pipeline, não este.
 
 ```bash
-cp .env.example .env    # preencha senhas e o JWT_SECRET (instruções no próprio arquivo)
-npm ci
-docker compose up -d --build --wait    # sobe o banco, cria o database e o schema app, e sobe a API
-npm run migration:run                  # cria as tabelas; o container da API não roda migrations sozinho
-npm run seed:admin                     # primeiro administrador, com os dados ADMIN_* do .env
-curl localhost:3000/health             # {"status":"ok", ... "database":{"status":"up"}}
+cp .env.example .env    # preencha senhas, JWT_SECRET e ADMIN_* (instruções no próprio arquivo)
+docker compose up -d --build --wait
 ```
 
-O seed é idempotente: se já existe um administrador, nada é criado nem alterado.
+Esse comando sobe o sistema inteiro, em ordem:
+
+| Serviço | O que faz |
+|---|---|
+| `db` | SQL Server |
+| `db-init` | Cria o database e o schema `app` (roda uma vez e termina) |
+| `migrate` | Aplica as migrations pendentes e cria o primeiro administrador com os dados `ADMIN_*` (roda uma vez e termina) |
+| `api` | API em http://localhost:3000 (`/health` mostra o banco) |
+| `front` | Interface em **http://localhost:8080**. O nginx repassa `/api` para a API |
+
+Entre no front com o `ADMIN_EMAIL` e a `ADMIN_SENHA` do `.env`. O seed é idempotente: se já existe um administrador, nada é criado nem alterado. Para outra porta, use `PORT` (API) ou `FRONT_PORT` (front) no `.env`.
+
+Para parar: `docker compose down`. Os dados ficam no volume `mssql-data`; `docker compose down -v` apaga tudo.
 
 ### Desenvolvimento
 
 Para rodar a API fora do Docker, com recarga automática, deixe só o banco no compose:
 
 ```bash
+npm ci
 docker compose up -d --wait db db-init
+npm run migration:run
+npm run seed:admin
 npm run start:dev
 ```
 

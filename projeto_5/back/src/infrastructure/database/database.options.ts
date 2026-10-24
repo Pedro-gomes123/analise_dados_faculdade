@@ -34,6 +34,9 @@ export function buildDatabaseOptions(
     options: {
       encrypt: env.DB_ENCRYPT,
       trustServerCertificate: env.DB_TRUST_SERVER_CERTIFICATE,
+      // Columns are datetime2 in UTC (DEC-017). TypeORM defaults this to false,
+      // which would read and write dates in the process time zone.
+      useUTC: true,
     },
     // Schemas bronze/silver/gold belong to the data pipeline (DEC-006, DEC-008).
     synchronize: false,

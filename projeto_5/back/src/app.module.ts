@@ -11,6 +11,7 @@ import {
 import { GlobalExceptionFilter } from '@/core/exceptions/global-exception.filter';
 import { createValidationPipe } from '@/core/pipes/validation.pipe';
 import { DatabaseModule } from '@/infrastructure/database/database.module';
+import { AcessoModule } from '@/modules/acesso/acesso.module';
 import { HealthModule } from '@/modules/health/health.module';
 
 @Module({
@@ -18,6 +19,7 @@ import { HealthModule } from '@/modules/health/health.module';
     ConfigModule.forRoot({ isGlobal: true, validate: validateEnv }),
     DatabaseModule,
     HealthModule,
+    AcessoModule,
   ],
   controllers: [AppController],
   providers: [

@@ -25,7 +25,7 @@ describe('buildDatabaseOptions', () => {
       username: 'sa',
       password: 'secret',
       database: 'vigia',
-      options: { encrypt: true, trustServerCertificate: false },
+      options: { encrypt: true, trustServerCertificate: false, useUTC: true },
     });
   });
 

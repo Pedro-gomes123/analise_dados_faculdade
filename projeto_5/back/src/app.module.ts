@@ -13,6 +13,7 @@ import { createValidationPipe } from '@/core/pipes/validation.pipe';
 import { DatabaseModule } from '@/infrastructure/database/database.module';
 import { AcessoModule } from '@/modules/acesso/acesso.module';
 import { HealthModule } from '@/modules/health/health.module';
+import { RastreioOperacionalModule } from '@/modules/rastreio-operacional/rastreio-operacional.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { HealthModule } from '@/modules/health/health.module';
     DatabaseModule,
     HealthModule,
     AcessoModule,
+    RastreioOperacionalModule,
   ],
   controllers: [AppController],
   providers: [

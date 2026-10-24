@@ -1,8 +1,15 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { APP_FILTER, APP_PIPE } from '@nestjs/core';
 import { AppController } from '@/app.controller';
 import { AppService } from '@/app.service';
-import { validateEnv } from '@/core/config/env.validation';
+import {
+  EnvironmentVariables,
+  NodeEnv,
+  validateEnv,
+} from '@/core/config/env.validation';
+import { GlobalExceptionFilter } from '@/core/exceptions/global-exception.filter';
+import { createValidationPipe } from '@/core/pipes/validation.pipe';
 import { DatabaseModule } from '@/infrastructure/database/database.module';
 import { HealthModule } from '@/modules/health/health.module';
 
@@ -13,6 +20,18 @@ import { HealthModule } from '@/modules/health/health.module';
     HealthModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    // Registered as providers (not in main.ts) so e2e tests get the same behavior.
+    { provide: APP_PIPE, useFactory: createValidationPipe },
+    {
+      provide: APP_FILTER,
+      inject: [ConfigService],
+      useFactory: (config: ConfigService<EnvironmentVariables, true>) =>
+        new GlobalExceptionFilter(
+          config.get('NODE_ENV', { infer: true }) === NodeEnv.Production,
+        ),
+    },
+  ],
 })
 export class AppModule {}

@@ -19,7 +19,9 @@ Cada usuário vê só as estações dos seus papéis:
 
 ## Rodar
 
-Nesta pasta (`projeto_5/front`):
+Para subir o sistema inteiro (banco, API e front, em http://localhost:8080), use o `docker compose` do back. Veja `../back/README.md`.
+
+Para desenvolver o front com recarga automática, com a API de pé, rode nesta pasta (`projeto_5/front`):
 
 ```bash
 npm ci
@@ -37,6 +39,8 @@ As chamadas vão para `/api`. Em desenvolvimento, o Vite repassa esse caminho pa
 | `npm run verificar` | oxlint, TypeScript e testes (Vitest + Testing Library) |
 | `npm run build` | Build de produção em `dist/` |
 | `npm run preview` | Serve o build localmente |
+
+No Docker, o build é servido pelo nginx (`Dockerfile`, `nginx.conf`), que repassa `/api` para a API como o proxy do Vite.
 
 ## Estrutura
 

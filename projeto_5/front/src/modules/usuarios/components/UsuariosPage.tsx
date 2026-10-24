@@ -56,7 +56,7 @@ export function UsuariosPage({ page, busca, onSearchChange }: UsuariosPageProps)
       <PageTitle
         icon={Users}
         title="Usuários"
-        description="Contas, papéis e acesso ao sistema (PER-003)"
+        description="Contas, papéis e acesso ao sistema"
       >
         <Button onClick={() => abrirFormulario()}>
           <Plus />

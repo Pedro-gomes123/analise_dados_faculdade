@@ -145,7 +145,7 @@ export function ParametrosPanel({ podeEditar }: ParametrosPanelProps) {
         title={emAlternancia?.ativo ? 'Inativar parâmetro' : 'Reativar parâmetro'}
         description={
           emAlternancia?.ativo
-            ? 'O parâmetro deixa de disparar alertas (RN-002). O histórico é mantido.'
+            ? 'O parâmetro deixa de disparar alertas. O histórico é mantido.'
             : 'O parâmetro volta a disparar alertas.'
         }
         confirmLabel={emAlternancia?.ativo ? 'Inativar' : 'Reativar'}

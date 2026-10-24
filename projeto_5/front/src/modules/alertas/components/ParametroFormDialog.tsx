@@ -29,7 +29,7 @@ export function ParametroFormDialog({ open, onOpenChange, parametro }: Parametro
         <DialogHeader>
           <DialogTitle>{parametro ? 'Editar parâmetro' : 'Novo parâmetro'}</DialogTitle>
           <DialogDescription>
-            Toda alteração fica no histórico, com autor e valores anterior e novo (RN-001).
+            Toda alteração fica no histórico, com autor e valores anterior e novo.
           </DialogDescription>
         </DialogHeader>
         {open && (

@@ -5,6 +5,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { EnvironmentVariables } from '@/core/config/env.validation';
 import { AuthController } from '@/modules/acesso/controllers/auth.controller';
+import { UsuarioController } from '@/modules/acesso/controllers/usuario.controller';
 import { AuthGuard } from '@/modules/acesso/guards/auth.guard';
 import { RegistroAcesso } from '@/modules/acesso/entities/registro-acesso.entity';
 import { UsuarioPapel } from '@/modules/acesso/entities/usuario-papel.entity';
@@ -26,7 +27,7 @@ import { UsuarioService } from '@/modules/acesso/services/usuario.service';
       }),
     }),
   ],
-  controllers: [AuthController],
+  controllers: [AuthController, UsuarioController],
   providers: [
     PasswordHasher,
     UsuarioService,

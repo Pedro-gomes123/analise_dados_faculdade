@@ -4,6 +4,13 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import {
+  FilterOperator,
+  paginate,
+  Paginated,
+  PaginateConfig,
+  PaginateQuery,
+} from 'nestjs-paginate';
 import { DataSource, Repository } from 'typeorm';
 import { BusinessRuleException } from '@/core/exceptions/business-rule.exception';
 import { isUniqueViolation } from '@/infrastructure/database/sql-server-errors';
@@ -22,9 +29,21 @@ export interface CriarUsuario {
 
 export interface AlterarUsuario {
   nome?: string;
+  senha?: string;
   papeis?: Papel[];
   ativo?: boolean;
 }
+
+// DEC-012. ORDER BY is always present, which SQL Server requires for OFFSET.
+export const USUARIO_PAGINATE_CONFIG: PaginateConfig<Usuario> = {
+  sortableColumns: ['id', 'nome', 'email', 'dthrCriacao'],
+  defaultSortBy: [['nome', 'ASC']],
+  searchableColumns: ['nome', 'email'],
+  filterableColumns: { 'papeis.papel': [FilterOperator.EQ] },
+  relations: { papeis: true },
+  defaultLimit: 20,
+  maxLimit: 100,
+};
 
 export const SEM_PAPEL_MESSAGE = 'Informe ao menos um papel válido';
 
@@ -103,6 +122,10 @@ export class UsuarioService {
       }
 
       if (dados.nome !== undefined) usuario.nome = dados.nome.trim();
+      // PR-020: the administrator resets the password.
+      if (dados.senha !== undefined) {
+        usuario.senhaHash = await this.hasher.hash(dados.senha);
+      }
       // DEC-014: users are deactivated, never deleted.
       if (dados.ativo !== undefined) usuario.ativo = dados.ativo;
       usuario.dthrAtualizacao = new Date();
@@ -111,6 +134,10 @@ export class UsuarioService {
     });
 
     return this.buscarPorId(id);
+  }
+
+  listar(query: PaginateQuery): Promise<Paginated<Usuario>> {
+    return paginate(query, this.usuarios, USUARIO_PAGINATE_CONFIG);
   }
 
   async buscarPorId(id: number): Promise<Usuario> {

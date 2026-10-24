@@ -171,6 +171,16 @@ describe('UsuarioService.alterar', () => {
     expect(manager.remove).not.toHaveBeenCalled();
   });
 
+  it('hashes a new password set by the administrator (PR-020)', async () => {
+    const { service, manager, hasher } = setup();
+
+    await service.alterar(1, { senha: 'Nova-senha-1' });
+
+    const [[, salvo]] = manager.save.mock.calls as [[unknown, Usuario]];
+    expect(hasher.hash).toHaveBeenCalledWith('Nova-senha-1');
+    expect(salvo.senhaHash).toBe('hash-argon2');
+  });
+
   it('does not touch roles when they are not sent', async () => {
     const { service, manager } = setup();
 

@@ -5,6 +5,7 @@ import {
   HttpStatus,
   Post,
   Res,
+  StreamableFile,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -18,14 +19,14 @@ import { Papel } from '@/modules/acesso/enums/papel.enum';
 import { GerarBoletimDto } from '@/modules/boletins/dto/gerar-boletim.dto';
 import { BoletimService } from '@/modules/boletins/services/boletim.service';
 
+// PER-012. RN-009. POST because the body carries the sections; nothing is saved.
+// Content type is set only on success (not with @Header), so errors stay JSON.
 @ApiTags('boletins')
 @ApiBearerAuth()
 @Controller('boletins')
 export class BoletimController {
   constructor(private readonly boletins: BoletimService) {}
 
-  // PER-012. RN-009. POST because the body carries the sections; nothing is saved.
-  // The content type is set only on success (not with @Header), so errors stay JSON.
   @Post('pre-visualizacao')
   @HttpCode(HttpStatus.OK)
   @Papeis(Papel.Tecnico, Papel.Comunicacao)
@@ -38,5 +39,23 @@ export class BoletimController {
     const html = await this.boletins.preVisualizar(dto.secoes);
     res.type('html');
     return html;
+  }
+
+  // RN-009 #4. Manual publication afterwards (AM-005 b).
+  @Post('pdf')
+  @HttpCode(HttpStatus.OK)
+  @Papeis(Papel.Tecnico, Papel.Comunicacao)
+  @ApiProduces('application/pdf')
+  @ApiOkResponse({
+    description: 'Boletim em PDF',
+    schema: { type: 'string', format: 'binary' },
+  })
+  async gerarPdf(@Body() dto: GerarBoletimDto): Promise<StreamableFile> {
+    const pdf = await this.boletins.gerarPdf(dto.secoes);
+    return new StreamableFile(pdf.conteudo, {
+      type: 'application/pdf',
+      disposition: `attachment; filename="${pdf.nome}"`,
+      length: pdf.conteudo.length,
+    });
   }
 }

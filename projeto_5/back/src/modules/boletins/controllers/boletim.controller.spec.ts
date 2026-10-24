@@ -31,13 +31,14 @@ const USUARIOS: Record<number, Usuario> = {
   5: usuario(5, [Papel.Administrador]),
 };
 
-const URL = '/boletins/pre-visualizacao';
+const PREVIA = '/boletins/pre-visualizacao';
+const PDF = '/boletins/pdf';
 
 // PER-012 and RN-009 #2/#3, with the real guard, pipe and filter.
 describe('BoletimController', () => {
   let app: INestApplication<App>;
   const tokens: Record<number, string> = {};
-  const service = { preVisualizar: jest.fn() };
+  const service = { preVisualizar: jest.fn(), gerarPdf: jest.fn() };
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -70,27 +71,32 @@ describe('BoletimController', () => {
 
   beforeEach(() => {
     service.preVisualizar.mockReset();
+    service.gerarPdf.mockReset();
   });
 
-  const post = (body: unknown, id: number) =>
+  const post = (url: string, body: unknown, id: number) =>
     request(app.getHttpServer())
-      .post(URL)
+      .post(url)
       .set('Authorization', `Bearer ${tokens[id]}`)
       .send(body as object);
 
-  it('answers 401 without login', async () => {
+  it.each([PREVIA, PDF])('%s answers 401 without login', async (url) => {
     await request(app.getHttpServer())
-      .post(URL)
+      .post(url)
       .send({ secoes: ['rios'] })
       .expect(401);
   });
 
   it.each([1, 2])(
-    'answers 200 with HTML for user %i (TEC, COM: PER-012)',
+    'preview answers 200 with HTML for user %i (TEC, COM: PER-012)',
     async (id) => {
       service.preVisualizar.mockResolvedValue('<!doctype html><p>ok</p>');
 
-      const res = await post({ secoes: ['rios', 'cabecalho'] }, id).expect(200);
+      const res = await post(
+        PREVIA,
+        { secoes: ['rios', 'cabecalho'] },
+        id,
+      ).expect(200);
 
       expect(res.headers['content-type']).toBe('text/html; charset=utf-8');
       expect(res.text).toBe('<!doctype html><p>ok</p>');
@@ -98,18 +104,50 @@ describe('BoletimController', () => {
     },
   );
 
-  it.each([3, 4, 5])('answers 403 for user %i (GES, GIN, ADM)', async (id) => {
-    await post({ secoes: ['rios'] }, id).expect(403);
-    expect(service.preVisualizar).not.toHaveBeenCalled();
-  });
+  it.each([1, 2])(
+    'pdf answers 200 with the file for user %i (TEC, COM: PER-012)',
+    async (id) => {
+      const conteudo = Buffer.from('%PDF-1.3 teste');
+      service.gerarPdf.mockResolvedValue({
+        nome: 'boletim-2026-11-02.pdf',
+        conteudo,
+      });
+
+      const res = await post(PDF, { secoes: ['cabecalho'] }, id)
+        .responseType('blob')
+        .expect(200);
+
+      expect(res.headers['content-type']).toBe('application/pdf');
+      expect(res.headers['content-disposition']).toBe(
+        'attachment; filename="boletim-2026-11-02.pdf"',
+      );
+      expect(res.body).toEqual(conteudo);
+      expect(service.gerarPdf).toHaveBeenCalledWith(['cabecalho']);
+    },
+  );
 
   it.each([
-    ['no section', { secoes: [] }],
-    ['an unknown section', { secoes: ['rios', 'abrigos'] }],
-    ['no field', {}],
-    ['not a list', { secoes: 'rios' }],
-  ])('answers 422 for %s (RN-009 #2, #3)', async (_, body) => {
-    const res = await post(body, 1)
+    [PREVIA, 3],
+    [PREVIA, 4],
+    [PREVIA, 5],
+    [PDF, 3],
+    [PDF, 4],
+    [PDF, 5],
+  ])('%s answers 403 for user %i (GES, GIN, ADM)', async (url, id) => {
+    await post(url, { secoes: ['rios'] }, id).expect(403);
+    expect(service.preVisualizar).not.toHaveBeenCalled();
+    expect(service.gerarPdf).not.toHaveBeenCalled();
+  });
+
+  it.each(
+    [PREVIA, PDF].flatMap((url) => [
+      [url, 'no section', { secoes: [] }],
+      [url, 'an unknown section', { secoes: ['rios', 'abrigos'] }],
+      [url, 'no field', {}],
+      [url, 'not a list', { secoes: 'rios' }],
+    ]),
+  )('%s answers 422 in JSON for %s (RN-009 #2, #3)', async (url, _, body) => {
+    const res = await post(url, body, 1)
       .expect(422)
       .expect('Content-Type', /application\/json/);
     const corpo = res.body as {
@@ -123,5 +161,6 @@ describe('BoletimController', () => {
       'Escolha ao menos uma seção válida',
     );
     expect(service.preVisualizar).not.toHaveBeenCalled();
+    expect(service.gerarPdf).not.toHaveBeenCalled();
   });
 });

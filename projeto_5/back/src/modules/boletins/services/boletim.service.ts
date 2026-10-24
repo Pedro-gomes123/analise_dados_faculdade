@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MoreThanOrEqual, Repository } from 'typeorm';
+import { FONTE, gerarPdf } from '@/infrastructure/pdf/gerar-pdf';
 import {
   type AcaoBoletim,
   type DocumentoBoletim,
@@ -8,8 +9,17 @@ import {
   montarDocumentoBoletim,
 } from '@/modules/boletins/domain/documento-boletim';
 import { renderizarHtml } from '@/modules/boletins/domain/renderizar-html';
+import {
+  definicaoPdf,
+  nomeDoArquivo,
+} from '@/modules/boletins/domain/renderizar-pdf';
 import { SecaoBoletim } from '@/modules/boletins/enums/secao-boletim.enum';
 import { Acao } from '@/modules/rastreio-operacional/entities/acao.entity';
+
+export interface ArquivoPdf {
+  nome: string;
+  conteudo: Buffer;
+}
 
 // RN-009. Gold sections (meteorologia, rios) arrive with TASK-032.
 @Injectable()
@@ -33,6 +43,18 @@ export class BoletimService {
     agora = new Date(),
   ): Promise<string> {
     return renderizarHtml(await this.montar(secoes, agora));
+  }
+
+  // RN-009 #4: same document as the preview.
+  async gerarPdf(
+    secoes: readonly SecaoBoletim[],
+    agora = new Date(),
+  ): Promise<ArquivoPdf> {
+    const documento = await this.montar(secoes, agora);
+    return {
+      nome: nomeDoArquivo(documento.geradoEm),
+      conteudo: await gerarPdf(definicaoPdf(documento, FONTE)),
+    };
   }
 
   // PR-022 b: actions registered in the last 24 h, newest first.

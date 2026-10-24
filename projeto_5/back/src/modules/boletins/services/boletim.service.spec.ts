@@ -70,4 +70,17 @@ describe('BoletimService (RN-009)', () => {
       html.indexOf('data-secao="acoes_abrigos"'),
     );
   });
+
+  it('generates the PDF of the same document, named by date (RN-009 #4)', async () => {
+    const { service, acoes } = setup();
+
+    const pdf = await service.gerarPdf(
+      [SecaoBoletim.AcoesAbrigos, SecaoBoletim.Cabecalho],
+      AGORA,
+    );
+
+    expect(acoes.find).toHaveBeenCalledTimes(1);
+    expect(pdf.nome).toBe('boletim-2026-11-02.pdf');
+    expect(pdf.conteudo.subarray(0, 5).toString()).toBe('%PDF-');
+  });
 });

@@ -2,18 +2,17 @@ import { describe, expect, it } from 'vitest'
 import { encontrarItemAtivo, secoesDoMenu } from '@/components/layout/navegacao'
 
 describe('secoesDoMenu (DEC-021, REQ-013)', () => {
-  it('separa estações e administração', () => {
+  it('ADM: as quatro estações em Estações e os usuários em Administração (PR-023)', () => {
     expect(
-      secoesDoMenu(['ADM', 'GES']).map((s) => [s.titulo, s.itens.map((i) => i.codigo)]),
+      secoesDoMenu(['ADM']).map((s) => [s.titulo, s.itens.map((i) => i.codigo)]),
     ).toEqual([
-      ['Estações', ['EST-02']],
+      ['Estações', ['EST-01', 'EST-02', 'EST-03', 'EST-04']],
       ['Administração', ['ADM']],
     ])
   })
 
   it('esconde a seção sem itens', () => {
     expect(secoesDoMenu(['COM']).map((s) => s.titulo)).toEqual(['Estações'])
-    expect(secoesDoMenu(['ADM']).map((s) => s.titulo)).toEqual(['Administração'])
   })
 })
 

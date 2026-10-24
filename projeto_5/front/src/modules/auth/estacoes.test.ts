@@ -26,12 +26,23 @@ describe('temPapel', () => {
     expect(temPapel(['COM', 'TEC'], ['TEC'])).toBe(true)
     expect(temPapel(['COM'], ['TEC', 'GES'])).toBe(false)
   })
+
+  it('o ADM passa em qualquer estação (PR-023)', () => {
+    expect(temPapel(['ADM'], ['COM'])).toBe(true)
+    expect(temPapel(['ADM'], ['GES', 'GIN'])).toBe(true)
+  })
 })
 
 describe('estacoesDoUsuario (REQ-013)', () => {
-  it('mostra só as estações dos papéis do usuário, na ordem EST-01 a EST-04 e ADM', () => {
-    expect(estacoesDoUsuario(['ADM', 'COM', 'TEC']).map((e) => e.codigo)).toEqual([
+  it('mostra só as estações dos papéis do usuário, na ordem EST-01 a EST-04', () => {
+    expect(estacoesDoUsuario(['COM', 'TEC']).map((e) => e.codigo)).toEqual(['EST-01', 'EST-04'])
+  })
+
+  it('o ADM vê as quatro estações e a administração (PR-023)', () => {
+    expect(estacoesDoUsuario(['ADM']).map((e) => e.codigo)).toEqual([
       'EST-01',
+      'EST-02',
+      'EST-03',
       'EST-04',
       'ADM',
     ])

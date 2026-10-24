@@ -1,5 +1,7 @@
+import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { LogOut } from 'lucide-react'
+import { Eye, LogOut } from 'lucide-react'
+import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { Button } from '@/components/ui/button'
 import type { SecaoDoMenu } from '@/components/layout/navegacao'
 
@@ -22,11 +24,13 @@ export function MenuLateral(props: ConteudoDoMenuProps) {
 }
 
 export function ConteudoDoMenu({ secoes, nome, papeis, onLogout, aoNavegar }: ConteudoDoMenuProps) {
+  const [confirmandoSaida, setConfirmandoSaida] = useState(false)
+
   return (
     <>
       <Link to="/" className="flex items-center gap-2 px-2" onClick={aoNavegar}>
-        <span className="flex size-8 items-center justify-center rounded-md bg-primary font-bold text-primary-foreground">
-          V
+        <span className="flex size-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
+          <Eye className="size-5" aria-hidden />
         </span>
         <span className="leading-tight">
           <span className="block font-semibold">O Vigia</span>
@@ -65,11 +69,20 @@ export function ConteudoDoMenu({ secoes, nome, papeis, onLogout, aoNavegar }: Co
           <p className="truncate text-sm font-medium">{nome}</p>
           <p className="truncate text-xs text-muted-foreground">{papeis.join(', ')}</p>
         </div>
-        <Button variant="outline" size="sm" onClick={onLogout}>
+        <Button variant="outline" size="sm" onClick={() => setConfirmandoSaida(true)}>
           <LogOut />
           Sair
         </Button>
       </div>
+
+      <ConfirmDialog
+        open={confirmandoSaida}
+        onOpenChange={setConfirmandoSaida}
+        title="Sair da conta?"
+        description="Para voltar ao sistema, será preciso entrar de novo com e-mail e senha."
+        confirmLabel="Sair"
+        onConfirm={onLogout}
+      />
     </>
   )
 }

@@ -1,8 +1,8 @@
 import { PAPEIS } from '@/modules/auth/papeis'
 import type { Papel } from '@/modules/auth/types'
 
-// Estação de cada papel (permissoes.md, REQ-008 a REQ-011). ADM não tem
-// estação: abre a administração de usuários (PER-003).
+// Estação de cada papel (permissoes.md, REQ-008 a REQ-011). A área própria do
+// ADM é a administração de usuários (PER-003).
 export const ROTA_POR_PAPEL = {
   TEC: '/estacoes/est-01',
   GES: '/estacoes/est-02',
@@ -47,17 +47,24 @@ export const ESTACOES: Estacao[] = PAPEIS.map(({ valor, rotulo }) => ({
   rota: ROTA_POR_PAPEL[valor],
 }))
 
+// PR-023: o ADM tem também as permissões dos quatro papéis das estações.
+export function papeisEfetivos(papeis: Papel[]): Papel[] {
+  return papeis.includes('ADM') ? ESTACOES.map((e) => e.papel) : papeis
+}
+
 // REQ-013: cada perfil só vê as estações dos seus papéis (união, AM-004 c).
 export function estacoesDoUsuario(papeis: Papel[]): Estacao[] {
-  return ESTACOES.filter((estacao) => papeis.includes(estacao.papel))
+  const efetivos = papeisEfetivos(papeis)
+  return ESTACOES.filter((estacao) => efetivos.includes(estacao.papel))
 }
 
 // FLX-001 "abre a estação do primeiro papel". O back ordena os papéis em ordem
-// alfabética, então a prioridade é fixa: EST-01 a EST-04, depois ADM.
+// alfabética, então a prioridade é fixa: EST-01 a EST-04, depois ADM. Vale só o
+// papel atribuído: o ADM sozinho continua abrindo a administração.
 export function rotaInicial(papeis: Papel[]): RotaInicial | null {
-  return estacoesDoUsuario(papeis)[0]?.rota ?? null
+  return ESTACOES.find((estacao) => papeis.includes(estacao.papel))?.rota ?? null
 }
 
 export function temPapel(papeis: Papel[], permitidos: Papel[]): boolean {
-  return papeis.some((p) => permitidos.includes(p))
+  return papeisEfetivos(papeis).some((p) => permitidos.includes(p))
 }

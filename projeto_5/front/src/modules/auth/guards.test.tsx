@@ -13,6 +13,11 @@ vi.mock('@/modules/auth/service/auth.service', () => ({
   getMe: vi.fn(),
 }))
 
+vi.mock('@/modules/alertas/service/alertas.service', () => ({
+  listarAlertas: vi.fn(() => new Promise(() => {})),
+  listarParametros: vi.fn(() => new Promise(() => {})),
+}))
+
 vi.mock('@/modules/usuarios/service/usuarios.service', () => ({
   listarUsuarios: vi.fn(() => new Promise(() => {})),
 }))

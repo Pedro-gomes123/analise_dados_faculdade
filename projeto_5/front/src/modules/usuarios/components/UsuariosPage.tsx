@@ -1,9 +1,9 @@
 import { useState, type FormEvent } from 'react'
 import { Plus, Search, Users } from 'lucide-react'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
-import { ErrorAlert } from '@/components/ErrorAlert'
 import { PageTitle } from '@/components/PageTitle'
 import { Paginacao } from '@/components/Paginacao'
+import { QueryResult } from '@/components/QueryResult'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -80,33 +80,23 @@ export function UsuariosPage({ page, busca, onSearchChange }: UsuariosPageProps)
             </Button>
           </form>
 
-          {usuariosQuery.isPending && <p className="text-muted-foreground">Carregando...</p>}
-          {usuariosQuery.isError && (
-            <ErrorAlert
-              action={
-                <Button variant="outline" size="sm" onClick={() => void usuariosQuery.refetch()}>
-                  Tentar de novo
-                </Button>
-              }
-            >
-              {describeApiError(usuariosQuery.error)}
-            </ErrorAlert>
-          )}
-          {usuariosQuery.data && (
-            <>
-              <UsuariosTable
-                usuarios={usuariosQuery.data.data}
-                onEditar={abrirFormulario}
-                onAlternarAtivo={abrirAlternancia}
-              />
-              <Paginacao
-                page={usuariosQuery.data.meta.currentPage}
-                totalPages={usuariosQuery.data.meta.totalPages}
-                totalItems={usuariosQuery.data.meta.totalItems}
-                onPageChange={(novaPagina) => onSearchChange({ page: novaPagina, busca })}
-              />
-            </>
-          )}
+          <QueryResult query={usuariosQuery}>
+            {(pagina) => (
+              <>
+                <UsuariosTable
+                  usuarios={pagina.data}
+                  onEditar={abrirFormulario}
+                  onAlternarAtivo={abrirAlternancia}
+                />
+                <Paginacao
+                  page={pagina.meta.currentPage}
+                  totalPages={pagina.meta.totalPages}
+                  totalItems={pagina.meta.totalItems}
+                  onPageChange={(novaPagina) => onSearchChange({ page: novaPagina, busca })}
+                />
+              </>
+            )}
+          </QueryResult>
         </CardContent>
       </Card>
 

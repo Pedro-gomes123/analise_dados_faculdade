@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createMemoryHistory, createRouter, RouterProvider } from '@tanstack/react-router'
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import { AxiosError } from 'axios'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { getMe } from '@/modules/auth/service/auth.service'
@@ -62,7 +62,9 @@ describe('guarda de rotas', () => {
     const router = await abrir('/')
 
     expect(router.state.location.pathname).toBe('/estacoes/est-02')
-    expect(await screen.findByText('EST-02 · Gestor(a) de Emergências')).toBeInTheDocument()
+    expect(
+      await screen.findByRole('heading', { name: 'EST-02 · Gestor(a) de Emergências' }),
+    ).toBeInTheDocument()
   })
 
   it('devolve para a própria estação quem abre a estação de outro papel', async () => {
@@ -86,5 +88,23 @@ describe('guarda de rotas', () => {
 
     expect(router.state.location.pathname).toBe('/login')
     expect(getToken()).toBeNull()
+  })
+
+  it('mostra no menu só as estações do usuário, com a atual destacada e na trilha', async () => {
+    logado(['TEC', 'GIN', 'ADM'])
+    await abrir('/estacoes/est-03')
+
+    const menu = await screen.findByRole('navigation', { name: 'Menu principal' })
+    const itens = within(menu).getAllByRole('link')
+    expect(itens.map((a) => a.textContent)).toEqual([
+      'Técnico(a) VigidesastresEST-01',
+      'Gestão InstitucionalEST-03',
+      'Usuários',
+    ])
+    expect(itens[1]).toHaveAttribute('aria-current', 'page')
+
+    const trilha = screen.getByRole('navigation', { name: 'Trilha' })
+    expect(trilha).toHaveTextContent('EstaçõesGestão Institucional')
+    expect(screen.getByRole('heading', { name: 'EST-03 · Gestão Institucional' })).toBeInTheDocument()
   })
 })

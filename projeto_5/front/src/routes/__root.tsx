@@ -6,13 +6,5 @@ interface RouterContext {
 }
 
 export const Route = createRootRouteWithContext<RouterContext>()({
-  component: RootLayout,
+  component: Outlet,
 })
-
-function RootLayout() {
-  return (
-    <div className="min-h-screen bg-muted/40 text-foreground">
-      <Outlet />
-    </div>
-  )
-}

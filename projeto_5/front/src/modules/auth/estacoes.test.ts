@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { rotaInicial, temPapel } from '@/modules/auth/estacoes'
+import { estacoesDoUsuario, rotaInicial, temPapel } from '@/modules/auth/estacoes'
 
 describe('rotaInicial', () => {
   it.each([
@@ -25,5 +25,27 @@ describe('temPapel', () => {
   it('vale a união dos papéis (AM-004 c)', () => {
     expect(temPapel(['COM', 'TEC'], ['TEC'])).toBe(true)
     expect(temPapel(['COM'], ['TEC', 'GES'])).toBe(false)
+  })
+})
+
+describe('estacoesDoUsuario (REQ-013)', () => {
+  it('mostra só as estações dos papéis do usuário, na ordem EST-01 a EST-04 e ADM', () => {
+    expect(estacoesDoUsuario(['ADM', 'COM', 'TEC']).map((e) => e.codigo)).toEqual([
+      'EST-01',
+      'EST-04',
+      'ADM',
+    ])
+  })
+
+  it('usa o nome da estação (EQP-14)', () => {
+    expect(estacoesDoUsuario(['GES'])).toEqual([
+      {
+        papel: 'GES',
+        codigo: 'EST-02',
+        titulo: 'Gestor(a) de Emergências',
+        descricao: 'Mapa de risco, alertas automáticos por parâmetro e linha do tempo do evento',
+        rota: '/estacoes/est-02',
+      },
+    ])
   })
 })

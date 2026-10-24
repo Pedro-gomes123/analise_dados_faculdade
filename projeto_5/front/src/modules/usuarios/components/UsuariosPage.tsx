@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Plus, Search } from 'lucide-react'
+import { Plus, Search, Users } from 'lucide-react'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { ErrorAlert } from '@/components/ErrorAlert'
 import { PageTitle } from '@/components/PageTitle'
@@ -53,7 +53,11 @@ export function UsuariosPage({ page, busca, onSearchChange }: UsuariosPageProps)
 
   return (
     <>
-      <PageTitle title="Administração de usuários">
+      <PageTitle
+        icon={Users}
+        title="Usuários"
+        description="Contas, papéis e acesso ao sistema (PER-003)"
+      >
         <Button onClick={() => abrirFormulario()}>
           <Plus />
           Novo usuário

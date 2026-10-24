@@ -18,10 +18,14 @@ function LoginPage() {
   const navigate = useNavigate()
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center gap-4 p-6">
+    <main className="flex min-h-screen items-center justify-center bg-muted/40 p-6">
+      <div className="flex w-full max-w-sm flex-col gap-4">
       <Card>
         <CardHeader>
-          <CardTitle>Sala de Situação</CardTitle>
+          <span className="mb-2 flex size-10 items-center justify-center rounded-md bg-primary text-lg font-bold text-primary-foreground">
+            V
+          </span>
+          <CardTitle>O Vigia · Sala de Situação</CardTitle>
           <CardDescription>Vigidesastres | Secretaria de Saúde do Recife</CardDescription>
         </CardHeader>
         <CardContent>
@@ -35,6 +39,7 @@ function LoginPage() {
       </Card>
       <div className="text-sm">
         <ApiStatus />
+      </div>
       </div>
     </main>
   )

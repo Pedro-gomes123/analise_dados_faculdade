@@ -5,8 +5,10 @@ import {
   IsInt,
   IsNotEmpty,
   IsString,
+  Matches,
   Max,
   Min,
+  MinLength,
   validateSync,
 } from 'class-validator';
 
@@ -63,6 +65,15 @@ export class EnvironmentVariables {
   @Transform(toBoolean)
   @IsBoolean()
   DB_TRUST_SERVER_CERTIFICATE: boolean = false;
+
+  // DEC-013. At least 32 characters so a weak secret never reaches production.
+  @IsString()
+  @MinLength(32)
+  JWT_SECRET!: string;
+
+  // Format accepted by jsonwebtoken: number + s/m/h/d (e.g. 8h).
+  @Matches(/^\d+[smhd]$/)
+  JWT_EXPIRES_IN: `${number}${'s' | 'm' | 'h' | 'd'}` = '8h';
 }
 
 export function validateEnv(config: Record<string, unknown>) {

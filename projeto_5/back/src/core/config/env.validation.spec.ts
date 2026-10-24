@@ -6,6 +6,7 @@ const requiredEnv = {
   DB_USER: 'sa',
   DB_PASSWORD: 'secret',
   DB_NAME: 'vigia',
+  JWT_SECRET: 'x'.repeat(32),
 };
 
 describe('validateEnv', () => {
@@ -40,6 +41,19 @@ describe('validateEnv', () => {
     expect(() => validateEnv({ ...requiredEnv, NODE_ENV: 'staging' })).toThrow(
       /NODE_ENV/,
     );
+  });
+
+  it('defaults the token lifetime to 8h', () => {
+    expect(validateEnv(requiredEnv).JWT_EXPIRES_IN).toBe('8h');
+  });
+
+  it('rejects a short JWT secret and an invalid lifetime', () => {
+    expect(() => validateEnv({ ...requiredEnv, JWT_SECRET: 'curto' })).toThrow(
+      /JWT_SECRET/,
+    );
+    expect(() =>
+      validateEnv({ ...requiredEnv, JWT_EXPIRES_IN: 'amanha' }),
+    ).toThrow(/JWT_EXPIRES_IN/);
   });
 
   it('requires the database connection variables', () => {

@@ -1,18 +1,11 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { ApiStatus } from '@/modules/health/components/ApiStatus'
+import { createFileRoute, redirect } from '@tanstack/react-router'
+import { rotaInicial } from '@/modules/auth/estacoes'
+import { carregarUsuario } from '@/modules/auth/guards'
 
+// Sem tela própria: manda para a estação do papel ou para o login (FLX-001).
 export const Route = createFileRoute('/')({
-  component: HomePage,
+  beforeLoad: async ({ context }) => {
+    const usuario = await carregarUsuario(context.queryClient)
+    throw redirect({ to: (usuario && rotaInicial(usuario.papeis)) || '/login' })
+  },
 })
-
-// Página técnica provisória: as telas do produto dependem dos requisitos aprovados e do mockup.
-function HomePage() {
-  return (
-    <main className="mx-auto max-w-3xl p-6">
-      <h1 className="text-2xl font-semibold">Sala de Situação | Vigidesastres</h1>
-      <div className="mt-4">
-        <ApiStatus />
-      </div>
-    </main>
-  )
-}

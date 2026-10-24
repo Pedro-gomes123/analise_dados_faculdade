@@ -6,6 +6,9 @@ import type { App } from 'supertest/types';
 import { GlobalExceptionFilter } from '@/core/exceptions/global-exception.filter';
 import { createValidationPipe } from '@/core/pipes/validation.pipe';
 import { AuthController } from '@/modules/acesso/controllers/auth.controller';
+import { UsuarioPapel } from '@/modules/acesso/entities/usuario-papel.entity';
+import { Usuario } from '@/modules/acesso/entities/usuario.entity';
+import { Papel } from '@/modules/acesso/enums/papel.enum';
 import { AuthService } from '@/modules/acesso/services/auth.service';
 
 // HTTP contract of POST /auth/login with the real pipe and filter; the service is mocked.
@@ -58,6 +61,29 @@ describe('AuthController', () => {
       status_code: 401,
       message: 'E-mail ou senha inválidos',
       path: '/auth/login',
+    });
+  });
+
+  it('GET /auth/me returns the current user without the password hash', () => {
+    const controller = app.get(AuthController);
+    const usuario = Object.assign(new Usuario(), {
+      id: 3,
+      nome: 'Fernanda Lima',
+      email: 'fernanda@exemplo.gov.br',
+      senhaHash: 'nao-pode-sair',
+      ativo: true,
+      papeis: [
+        Object.assign(new UsuarioPapel(), { papel: Papel.Comunicacao }),
+        Object.assign(new UsuarioPapel(), { papel: Papel.GestaoInstitucional }),
+      ],
+    });
+
+    expect(controller.me(usuario)).toEqual({
+      id: 3,
+      nome: 'Fernanda Lima',
+      email: 'fernanda@exemplo.gov.br',
+      papeis: [Papel.Comunicacao, Papel.GestaoInstitucional],
+      ativo: true,
     });
   });
 

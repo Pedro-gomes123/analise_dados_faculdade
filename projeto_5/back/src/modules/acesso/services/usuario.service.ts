@@ -122,6 +122,14 @@ export class UsuarioService {
     return usuario;
   }
 
+  // Used by AuthGuard on every request; null instead of 404.
+  buscarAutenticado(id: number): Promise<Usuario | null> {
+    return this.usuarios.findOne({
+      where: { id },
+      relations: { papeis: true },
+    });
+  }
+
   // Only for authentication (TASK-013): the one query that loads the password hash.
   buscarParaLogin(email: string): Promise<Usuario | null> {
     return this.usuarios

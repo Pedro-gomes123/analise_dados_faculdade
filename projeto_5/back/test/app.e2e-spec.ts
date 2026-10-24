@@ -4,16 +4,21 @@ import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from '@/app.module';
 
-describe('AppController (e2e)', () => {
+// Requires the database from compose.yml: docker compose up -d db db-init
+describe('App (e2e)', () => {
   let app: INestApplication<App>;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
 
     app = moduleFixture.createNestApplication();
     await app.init();
+  });
+
+  afterAll(async () => {
+    await app.close();
   });
 
   it('/ (GET)', () => {
@@ -23,7 +28,15 @@ describe('AppController (e2e)', () => {
       .expect('Hello World!');
   });
 
-  afterEach(async () => {
-    await app.close();
+  it('/health (GET) reports the database as up', () => {
+    return request(app.getHttpServer())
+      .get('/health')
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body).toMatchObject({
+          status: 'ok',
+          info: { database: { status: 'up' } },
+        });
+      });
   });
 });

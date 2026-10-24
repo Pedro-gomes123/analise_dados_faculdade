@@ -18,7 +18,7 @@ export const NAO_AUTENTICADO_MESSAGE = 'Faça login para continuar';
 export const SEM_PERMISSAO_MESSAGE = 'Você não tem permissão para esta ação';
 
 // Global guard (DEC-013, DEC-010): 401 without a valid token or for an inactive
-// user, 403 when the route requires roles the user does not have.
+// user, 403 when the route requires roles the user does not have (ADM has all).
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
@@ -51,8 +51,11 @@ export class AuthGuard implements CanActivate {
       PAPEIS_KEY,
       targets,
     );
+    // PR-023: the administrator also has every station role.
     if (exigidos?.length) {
-      const temPapel = usuario.papeis.some((p) => exigidos.includes(p.papel));
+      const temPapel = usuario.papeis.some(
+        (p) => p.papel === Papel.Administrador || exigidos.includes(p.papel),
+      );
       if (!temPapel) throw new ForbiddenException(SEM_PERMISSAO_MESSAGE);
     }
 

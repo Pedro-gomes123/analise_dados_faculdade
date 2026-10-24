@@ -87,8 +87,8 @@ describe('BoletimController', () => {
       .expect(401);
   });
 
-  it.each([1, 2])(
-    'preview answers 200 with HTML for user %i (TEC, COM: PER-012)',
+  it.each([1, 2, 5])(
+    'preview answers 200 with HTML for user %i (TEC, COM, ADM: PER-012, PR-023)',
     async (id) => {
       service.preVisualizar.mockResolvedValue('<!doctype html><p>ok</p>');
 
@@ -104,8 +104,8 @@ describe('BoletimController', () => {
     },
   );
 
-  it.each([1, 2])(
-    'pdf answers 200 with the file for user %i (TEC, COM: PER-012)',
+  it.each([1, 2, 5])(
+    'pdf answers 200 with the file for user %i (TEC, COM, ADM: PER-012, PR-023)',
     async (id) => {
       const conteudo = Buffer.from('%PDF-1.3 teste');
       service.gerarPdf.mockResolvedValue({
@@ -129,11 +129,9 @@ describe('BoletimController', () => {
   it.each([
     [PREVIA, 3],
     [PREVIA, 4],
-    [PREVIA, 5],
     [PDF, 3],
     [PDF, 4],
-    [PDF, 5],
-  ])('%s answers 403 for user %i (GES, GIN, ADM)', async (url, id) => {
+  ])('%s answers 403 for user %i (GES, GIN)', async (url, id) => {
     await post(url, { secoes: ['rios'] }, id).expect(403);
     expect(service.preVisualizar).not.toHaveBeenCalled();
     expect(service.gerarPdf).not.toHaveBeenCalled();

@@ -95,14 +95,17 @@ describe('Boletins (e2e)', () => {
     expect(Number(res.headers['content-length'])).toBe(arquivo.length);
   });
 
-  it('TEC also generates it (PER-012)', async () => {
-    const tecnico = await logado(app, [Papel.Tecnico]);
+  it.each([Papel.Tecnico, Papel.Administrador])(
+    '%s also generates it (PER-012, PR-023)',
+    async (papel) => {
+      const outro = await logado(app, [papel]);
 
-    await previa({ secoes: ['cabecalho'] }, tecnico.token).expect(200);
-    await pdf({ secoes: ['cabecalho'] }, tecnico.token).expect(200);
-  });
+      await previa({ secoes: ['cabecalho'] }, outro.token).expect(200);
+      await pdf({ secoes: ['cabecalho'] }, outro.token).expect(200);
+    },
+  );
 
-  it.each([Papel.Gestor, Papel.GestaoInstitucional, Papel.Administrador])(
+  it.each([Papel.Gestor, Papel.GestaoInstitucional])(
     '%s cannot generate it: 403 (PER-012)',
     async (papel) => {
       const outro = await logado(app, [papel]);

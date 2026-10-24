@@ -109,15 +109,13 @@ describe('AlertaController', () => {
     [1, 'TEC'],
     [2, 'GES'],
     [3, 'GIN'],
+    [5, 'ADM, PR-023'],
   ])('lists alerts for user %i (%s, PER-006)', async (id) => {
     await get(id).expect(200);
   });
 
-  it.each([
-    [4, 'COM (DUV-036, denied until answered)'],
-    [5, 'ADM'],
-  ])('answers 403 for user %i: %s (PER-006)', async (id) => {
-    await get(id).expect(403);
+  it('answers 403 for COM (PER-006; DUV-036, denied until answered)', async () => {
+    await get(4).expect(403);
     expect(service.listar).not.toHaveBeenCalled();
   });
 

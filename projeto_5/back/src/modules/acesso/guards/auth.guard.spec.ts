@@ -141,4 +141,12 @@ describe('AuthGuard (DEC-013, PER)', () => {
 
     await get('/teste/gestor', await tokenDe(5)).expect(200);
   });
+
+  it('lets the administrator through any role check (PR-023)', async () => {
+    usuarios.buscarAutenticado.mockResolvedValue(
+      usuario([Papel.Administrador]),
+    );
+
+    await get('/teste/gestor', await tokenDe(5)).expect(200);
+  });
 });

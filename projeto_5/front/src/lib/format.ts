@@ -26,3 +26,12 @@ export function lerNumero(texto: string): number | null {
   if (limpo === '' || !/^-?\d+(\.\d+)?$/.test(limpo)) return null
   return Number(limpo)
 }
+
+// Duração em segundos para leitura rápida: 45 → "45 s"; 2280 → "38 min"; 3900 → "1 h 05 min".
+export function formatarDuracao(segundos: number): string {
+  if (segundos < 60) return `${segundos} s`
+  const minutos = Math.round(segundos / 60)
+  if (minutos < 60) return `${minutos} min`
+  const horas = Math.floor(minutos / 60)
+  return `${horas} h ${String(minutos % 60).padStart(2, '0')} min`
+}

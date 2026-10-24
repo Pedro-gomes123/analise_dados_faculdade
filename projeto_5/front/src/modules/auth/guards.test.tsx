@@ -18,6 +18,10 @@ vi.mock('@/modules/alertas/service/alertas.service', () => ({
   listarParametros: vi.fn(() => new Promise(() => {})),
 }))
 
+vi.mock('@/modules/indicadores/service/indicadores.service', () => ({
+  consultarTempoAcionamento: vi.fn(() => new Promise(() => {})),
+}))
+
 vi.mock('@/modules/usuarios/service/usuarios.service', () => ({
   listarUsuarios: vi.fn(() => new Promise(() => {})),
 }))

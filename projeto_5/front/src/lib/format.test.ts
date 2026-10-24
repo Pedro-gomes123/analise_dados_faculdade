@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatarDataHora, formatarNumero, lerNumero } from '@/lib/format'
+import { formatarDataHora, formatarDuracao, formatarNumero, lerNumero } from '@/lib/format'
 
 describe('format', () => {
   it('mostra a data UTC no horário do Recife (UTC−3)', () => {
@@ -24,5 +24,18 @@ describe('lerNumero', () => {
 
   it.each(['', 'abc', '1,2,3', '12a'])('recusa %j', (texto) => {
     expect(lerNumero(texto)).toBeNull()
+  })
+})
+
+describe('formatarDuracao', () => {
+  it.each([
+    [45, '45 s'],
+    [60, '1 min'],
+    [2280, '38 min'],
+    [3600, '1 h 00 min'],
+    [3900, '1 h 05 min'],
+    [90061, '25 h 01 min'],
+  ])('%i s → %s', (segundos, texto) => {
+    expect(formatarDuracao(segundos)).toBe(texto)
   })
 })

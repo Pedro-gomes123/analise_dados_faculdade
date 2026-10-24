@@ -23,7 +23,11 @@
     "migration:generate": "npm run typeorm -- migration:generate -d src/infrastructure/database/data-source.ts",
     "migration:run": "npm run typeorm -- migration:run -d src/infrastructure/database/data-source.ts",
     "migration:revert": "npm run typeorm -- migration:revert -d src/infrastructure/database/data-source.ts",
-    "migration:show": "npm run typeorm -- migration:show -d src/infrastructure/database/data-source.ts"
+    "migration:show": "npm run typeorm -- migration:show -d src/infrastructure/database/data-source.ts",
+    "lint:check": "eslint \"{src,test}/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\"",
+    "typecheck": "tsc --noEmit",
+    "verificar": "npm run format:check && npm run lint:check && npm run typecheck && npm test"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",

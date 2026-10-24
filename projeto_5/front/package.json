@@ -9,7 +9,9 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "typecheck": "tsc -b",
+    "verificar": "npm run lint && npm run typecheck && npm test"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",

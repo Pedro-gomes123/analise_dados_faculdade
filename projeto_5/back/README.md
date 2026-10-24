@@ -1,98 +1,82 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# O Vigia: API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+API da Sala de Situação do Vigidesastres (Secretaria de Saúde do Recife). NestJS 11 + TypeORM, com SQL Server.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+O app grava os próprios dados no schema `app`. Os dados climáticos chegam no schema `gold`, preenchido pela pipeline da equipe de dados. A API não escreve nesse schema.
 
-## Description
+## Requisitos
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- **Node 22** (`.nvmrc`). Com Node 20, a conexão com o banco falha com `Promise.withResolvers is not a function`. Use `nvm use` nesta pasta.
+- **Docker com Compose**, para o SQL Server local.
 
-## Project setup
+## Rodar
+
+Todos os comandos rodam nesta pasta (`projeto_5/back`). Atenção: o `compose.yml` de `projeto_5/` é o da pipeline, não este.
 
 ```bash
-$ npm install
+cp .env.example .env    # preencha senhas e o JWT_SECRET (instruções no próprio arquivo)
+npm ci
+docker compose up -d --build --wait    # sobe o banco, cria o database e o schema app, e sobe a API
+npm run migration:run                  # cria as tabelas; o container da API não roda migrations sozinho
+npm run seed:admin                     # primeiro administrador, com os dados ADMIN_* do .env
+curl localhost:3000/health             # {"status":"ok", ... "database":{"status":"up"}}
 ```
 
-## Compile and run the project
+O seed é idempotente: se já existe um administrador, nada é criado nem alterado.
+
+### Desenvolvimento
+
+Para rodar a API fora do Docker, com recarga automática, deixe só o banco no compose:
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+docker compose up -d --wait db db-init
+npm run start:dev
 ```
 
-## Run tests
+A documentação da API (Swagger) fica em http://localhost:3000/docs. Ela só existe fora de `NODE_ENV=production`, então não aparece no container.
+
+## Testes
+
+| Comando | O que roda |
+|---|---|
+| `npm run verificar` | Prettier, ESLint, TypeScript e os testes unitários (`src/**/*.spec.ts`). Não precisa de banco |
+| `npm run test:e2e` | Testes e2e (`test/*.e2e-spec.ts`) com o app inteiro contra o SQL Server do compose |
+
+Os e2e usam um database próprio, `<DB_NAME>_e2e`, no mesmo servidor. Os dados de desenvolvimento não são tocados. Na primeira execução, o setup cria o database e o schema e aplica as migrations. Cada teste começa com as tabelas vazias. Antes de rodar, o banco precisa estar de pé (`docker compose up -d --wait db db-init`).
+
+## Migrations
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+npm run migration:run       # aplica as pendentes
+npm run migration:revert    # desfaz a última
+npm run migration:show      # lista o estado
+npm run migration:create -- src/infrastructure/database/migrations/NomeDaMigration
 ```
 
-## Deployment
+O TypeORM nunca sincroniza o schema sozinho (`synchronize: false`). Toda mudança de tabela passa por uma migration.
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+## Estrutura
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+```
+src/
+  core/              configuração (env validada), filtro de erros, pipe de validação
+  infrastructure/    banco (TypeORM, migrations, seed) e geração de PDF
+  modules/
+    acesso/          login (JWT), usuários e papéis, registro de acesso
+    alertas/         parâmetros de alerta, histórico de alterações e alertas
+    rastreio-operacional/  ações, linha do tempo e tempo de acionamento
+    boletins/        pré-visualização em HTML e PDF do boletim
+    health/          GET /health
+test/                e2e e seus helpers
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## Formato de erro
 
-## Resources
+Todo erro responde em JSON:
 
-Check out a few resources that may come in handy when working with NestJS:
+```json
+{ "status_code": 409, "error": "Conflict", "message": "Já existe um usuário com este e-mail",
+  "business_rule_code": "EMAIL_JA_CADASTRADO", "timestamp": "...", "path": "/usuarios" }
+```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+Dados inválidos respondem 422, com `message: "Dados inválidos"` e o detalhe por campo em `errors`.

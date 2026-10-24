@@ -1,32 +1,50 @@
-# React + TypeScript + Vite
+# O Vigia: front
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Interface da Sala de Situação do Vigidesastres. React 19 + TypeScript, com Vite, TanStack Router e Query, Tailwind e shadcn/ui.
 
-Currently, two official plugins are available:
+Cada usuário vê só as estações dos seus papéis:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+| Estação | Papel |
+|---|---|
+| EST-01 · Técnico(a) Vigidesastres | TEC |
+| EST-02 · Gestor(a) de Emergências: alertas, parâmetros, registro de ações e linha do tempo | GES |
+| EST-03 · Gestão Institucional: tempo médio de acionamento | GIN |
+| EST-04 · Comunicação Institucional: composição, pré-visualização e PDF do boletim | COM |
+| Usuários: contas e papéis | ADM |
 
-## React Compiler
+## Requisitos
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Node 22** (`.nvmrc`).
+- **A API rodando** em http://localhost:3000. Veja `../back/README.md`.
 
-## Expanding the Oxlint configuration
+## Rodar
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+Nesta pasta (`projeto_5/front`):
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm ci
+npm run dev    # http://localhost:5173
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Entre com o administrador criado pelo `npm run seed:admin` do back e crie os demais usuários na tela **Usuários**.
+
+As chamadas vão para `/api`. Em desenvolvimento, o Vite repassa esse caminho para `http://localhost:3000` sem o prefixo (`vite.config.ts`). Para outra URL, defina `VITE_API_URL` em um `.env` (modelo em `.env.example`).
+
+## Comandos
+
+| Comando | O que faz |
+|---|---|
+| `npm run verificar` | oxlint, TypeScript e testes (Vitest + Testing Library) |
+| `npm run build` | Build de produção em `dist/` |
+| `npm run preview` | Serve o build localmente |
+
+## Estrutura
+
+```
+src/
+  components/      componentes reutilizáveis (ui/ = shadcn/ui; layout/ = menu lateral e cabeçalho)
+  lib/             cliente HTTP, formatação de datas e números, períodos
+  modules/         uma pasta por assunto: service (API), hooks (Query), components
+  routes/          rotas por arquivo (TanStack Router); _autenticado/ exige login
+  test/            helpers dos testes
+```

@@ -12,6 +12,7 @@ import { GlobalExceptionFilter } from '@/core/exceptions/global-exception.filter
 import { createValidationPipe } from '@/core/pipes/validation.pipe';
 import { DatabaseModule } from '@/infrastructure/database/database.module';
 import { AcessoModule } from '@/modules/acesso/acesso.module';
+import { AlertasModule } from '@/modules/alertas/alertas.module';
 import { HealthModule } from '@/modules/health/health.module';
 import { RastreioOperacionalModule } from '@/modules/rastreio-operacional/rastreio-operacional.module';
 
@@ -21,6 +22,7 @@ import { RastreioOperacionalModule } from '@/modules/rastreio-operacional/rastre
     DatabaseModule,
     HealthModule,
     AcessoModule,
+    AlertasModule,
     RastreioOperacionalModule,
   ],
   controllers: [AppController],

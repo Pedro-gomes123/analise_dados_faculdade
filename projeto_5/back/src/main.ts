@@ -1,9 +1,14 @@
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
+import { ConfigService } from '@nestjs/config';
+import { AppModule } from '@/app.module';
+import { EnvironmentVariables } from '@/core/config/env.validation';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  await app.listen(process.env.PORT ?? 3000);
+  app.enableShutdownHooks();
+
+  const config = app.get(ConfigService<EnvironmentVariables, true>);
+  await app.listen(config.get('PORT', { infer: true }));
 }
 bootstrap().catch((error: unknown) => {
   console.error(error);

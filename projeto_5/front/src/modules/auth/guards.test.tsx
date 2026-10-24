@@ -13,6 +13,10 @@ vi.mock('@/modules/auth/service/auth.service', () => ({
   getMe: vi.fn(),
 }))
 
+vi.mock('@/modules/usuarios/service/usuarios.service', () => ({
+  listarUsuarios: vi.fn(() => new Promise(() => {})),
+}))
+
 vi.mock('@/modules/health/components/ApiStatus', () => ({
   ApiStatus: () => null,
 }))

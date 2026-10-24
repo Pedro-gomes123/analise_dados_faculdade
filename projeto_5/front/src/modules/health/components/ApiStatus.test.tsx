@@ -1,21 +1,15 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import type { ReactNode } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ApiStatus } from '@/modules/health/components/ApiStatus'
 import { getHealth } from '@/modules/health/service/health.service'
+import { renderWithQuery } from '@/test/render'
 
 vi.mock('@/modules/health/service/health.service', () => ({
   getHealth: vi.fn(),
 }))
 
 const getHealthMock = vi.mocked(getHealth)
-
-function renderWithQuery(ui: ReactNode) {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  return render(<QueryClientProvider client={client}>{ui}</QueryClientProvider>)
-}
 
 describe('ApiStatus', () => {
   beforeEach(() => {

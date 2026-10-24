@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { ErrorAlert } from '@/components/ErrorAlert'
 import { FormField } from '@/components/FormField'
 import { Button } from '@/components/ui/button'
-import { apiErrorMessage, apiErrorStatus } from '@/lib/http'
+import { apiErrorStatus, describeApiError } from '@/lib/http'
 import { useLoginMutation } from '@/modules/auth/hooks/useAuth'
 import type { Usuario } from '@/modules/auth/types'
 
@@ -14,9 +14,7 @@ function mensagemDeErro(error: unknown): string {
   const status = apiErrorStatus(error)
   // FLX-001: mensagem única para e-mail inexistente, senha errada e usuário inativo.
   if (status === 401) return 'E-mail ou senha inválidos'
-  if (status === 422) return apiErrorMessage(error) ?? 'Dados inválidos'
-  if (status === undefined) return 'Não foi possível conectar ao servidor'
-  return 'Erro inesperado. Tente de novo.'
+  return describeApiError(error)
 }
 
 export function LoginForm({ onSuccess }: LoginFormProps) {

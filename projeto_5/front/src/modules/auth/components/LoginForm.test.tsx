@@ -1,12 +1,13 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { AxiosError, AxiosHeaders } from 'axios'
+import { AxiosError } from 'axios'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { LoginForm } from '@/modules/auth/components/LoginForm'
 import { login } from '@/modules/auth/service/auth.service'
 import { getToken } from '@/modules/auth/session'
 import type { Usuario } from '@/modules/auth/types'
+import { apiError } from '@/test/api-error'
+import { renderWithQuery } from '@/test/render'
 
 vi.mock('@/modules/auth/service/auth.service', () => ({
   login: vi.fn(),
@@ -23,24 +24,9 @@ const usuario: Usuario = {
   ativo: true,
 }
 
-function erroHttp(status: number, message = 'erro') {
-  return new AxiosError('falha', String(status), undefined, undefined, {
-    status,
-    statusText: '',
-    headers: {},
-    config: { headers: new AxiosHeaders() },
-    data: { status_code: status, error: '', message },
-  })
-}
-
 function setup() {
   const onSuccess = vi.fn()
-  const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } })
-  render(
-    <QueryClientProvider client={client}>
-      <LoginForm onSuccess={onSuccess} />
-    </QueryClientProvider>,
-  )
+  const { client } = renderWithQuery(<LoginForm onSuccess={onSuccess} />)
   return { onSuccess, client }
 }
 
@@ -77,7 +63,7 @@ describe('LoginForm', () => {
   })
 
   it('mostra a mensagem única do FLX-001 no 401', async () => {
-    loginMock.mockRejectedValue(erroHttp(401))
+    loginMock.mockRejectedValue(apiError(401))
     const { onSuccess } = setup()
 
     await preencherEEnviar()
@@ -87,8 +73,13 @@ describe('LoginForm', () => {
     expect(getToken()).toBeNull()
   })
 
-  it('mostra a mensagem de validação do back no 422', async () => {
-    loginMock.mockRejectedValue(erroHttp(422, 'E-mail inválido'))
+  it('mostra a mensagem do campo no 422', async () => {
+    loginMock.mockRejectedValue(
+      apiError(422, {
+        message: 'Dados inválidos',
+        errors: [{ property: 'email', constraints: { isEmail: 'E-mail inválido' } }],
+      }),
+    )
     setup()
 
     await preencherEEnviar('nao-e-email')

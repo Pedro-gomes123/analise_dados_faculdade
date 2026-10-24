@@ -26,20 +26,31 @@ http.interceptors.response.use(undefined, (error: unknown) => {
   return Promise.reject(error)
 })
 
-// Corpo de erro da API (DEC-010).
+// Corpo de erro da API (DEC-010). No 422, o detalhe por campo vem em `errors`.
 export interface ApiError {
   status_code: number
   error: string
   message: string
   business_rule_code?: string
-  errors?: unknown[]
+  errors?: { property: string; constraints: Record<string, string> }[]
 }
 
 export function apiErrorStatus(error: unknown): number | undefined {
   return axios.isAxiosError(error) ? error.response?.status : undefined
 }
 
+// Primeira mensagem de campo (422) ou a mensagem geral do erro.
 export function apiErrorMessage(error: unknown): string | undefined {
   if (!axios.isAxiosError<ApiError>(error)) return undefined
-  return error.response?.data?.message
+  const body = error.response?.data
+  const campo = body?.errors?.[0]?.constraints
+  return (campo && Object.values(campo)[0]) ?? body?.message
+}
+
+// Texto para o usuário em qualquer falha de chamada à API.
+export function describeApiError(error: unknown): string {
+  const status = apiErrorStatus(error)
+  if (status === undefined) return 'Não foi possível conectar ao servidor'
+  if (status >= 500) return 'Erro inesperado. Tente de novo.'
+  return apiErrorMessage(error) ?? 'Erro inesperado. Tente de novo.'
 }

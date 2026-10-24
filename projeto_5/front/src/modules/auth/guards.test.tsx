@@ -22,6 +22,11 @@ vi.mock('@/modules/indicadores/service/indicadores.service', () => ({
   consultarTempoAcionamento: vi.fn(() => new Promise(() => {})),
 }))
 
+vi.mock('@/modules/boletins/service/boletins.service', () => ({
+  preVisualizarBoletim: vi.fn(() => new Promise(() => {})),
+  gerarBoletimPdf: vi.fn(() => new Promise(() => {})),
+}))
+
 vi.mock('@/modules/usuarios/service/usuarios.service', () => ({
   listarUsuarios: vi.fn(() => new Promise(() => {})),
 }))

@@ -3,13 +3,12 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-# Carrega as variáveis do arquivo .env na raiz do projeto
-load_dotenv(Path(__file__).resolve().parent.parent / ".env")
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+load_dotenv(PROJECT_ROOT / ".env")
 
-MONGO_DATABASE = "operacional_db"
+MONGO_DATABASE = os.environ.get("MONGODB_DATABASE", "operacional_db")
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-RAW_DIR = PROJECT_ROOT / "data" / "raw"
+RAW_DIR = Path(__file__).resolve().parent / "data" / "raw"
 RAW_DIR.mkdir(parents=True, exist_ok=True)
 
 HEADERS = {

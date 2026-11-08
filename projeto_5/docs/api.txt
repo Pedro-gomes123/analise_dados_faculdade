@@ -1,0 +1,23 @@
+Clima / eventos meteorológicos
+- INMET (`apitempo.inmet.gov.br`) — API REST real, JSON, sem token pra estações automáticas. Padrão de endpoint é `/estacao/{data_inicio}/{data_fim}/{codigo_estacao}` — a estação automática de Recife tem código A301. O portal atual do INMET oferece acesso facilitado aos dados observados, inclusive via API. Dá temperatura, umidade, pressão, chuva horária — granularidade boa pra cruzar com picos de dengue/leptospirose.
+- APAC-PE — os avisos meteorológicos e hidrológicos (níveis de rio, risco de inundação em bacias como Capibaribe) são publicados por e-mail, no site institucional e no Instagram, sem API REST documentada publicamente. Aqui o caminho realista é scraping estruturado da página ou contato direto com a agência.
+- CEMADEN — mantém mapa interativo com download de dados pluviométricos, mas uma resposta institucional via Lei de Acesso à Informação confirma que o órgão não possui API específica para entrega em tempo real de alertas vigentes a outras instituições. Ou seja: nada de polling automatizado oficial, só exportação manual/CSV.
+
+Doenças / vigilância epidemiológica
+- InfoDengue (`info.dengue.mat.br`) — provavelmente sua melhor porta de entrada pronta. É uma API que entrega os dados dos boletins epidemiológicos compilados nacionalmente com apoio do Ministério da Saúde, em JSON ou CSV, com recorte de período customizável, alimentada pelo SINAN. Cobre dengue, zika e chikungunya por município.
+- Portal de Dados Abertos do Recife (`dados.recife.pe.gov.br`) — é CKAN, com API disponível em `/api/3` seguindo a documentação padrão do CKAN, e já publica o dataset "Casos de Dengue, Zika e Chikungunya" com registros das unidades de saúde públicas e particulares direto da Secretaria de Saúde municipal — dado de primeira mão, sem depender de terceiro.
+- PySUS + SINAN/TabNet — pra dado mais granular além de arbovirose, o caminho que a comunidade de saúde pública brasileira usa de fato é a lib Python `pysus`, que baixa os arquivos DBC/DBF do DATASUS programaticamente. Não é REST, mas é scriptável.
+- DEMAS (`apidadosabertos.saude.gov.br`) — API REST autenticada do Ministério da Saúde, com endpoints como CNES (cadastro de estabelecimentos de saúde). Não traz notificações/casos, mas é ótima pra geolocalizar UBS, UPA, hospitais como dimensão auxiliar.
+
+Escorpião (e outros animais peçonhentos)
+Esse agravo entra no mesmo pipeline do SINAN. Desde agosto de 2010 o acidente por animal peçonhento é de notificação compulsória no Brasil, com campo específico que classifica o tipo de acidente entre serpente, aranha, escorpião, lagarta, abelha e outros. Não existe uma API dedicada só a escorpião — na prática:
+- Agregado (estado/município): TabNet DATASUS ou `pysus` — dá pra puxar contagem por período/local, sem token.
+- Granular (bairro, geolocalizado): provavelmente vai exigir pedido formal à Secretaria de Saúde do Recife ou à SES-PE (Vigilância Epidemiológica), porque dado individualizado de agravo de notificação tem restrição de LGPD — o que normalmente é público já vem agregado.
+
+"Calamidade" no sentido de defesa civil
+
+- S2iD (Sistema Integrado de Informações sobre Desastres, SEDEC/Ministério da Integração) — é o sistema oficial que registra danos, prejuízos e o reconhecimento federal de Situação de Emergência ou Estado de Calamidade Pública por município. Os conjuntos de dados estão publicados no `dados.gov.br` (também CKAN), então acessíveis via API — provavelmente o dado mais "oficial" que existe pra decreto de calamidade.
+- CPRM/SGB — SACE, alertas de risco geológico (deslizamento), vale checar cobertura pra RMR.
+- CODECIR (Defesa Civil do Recife) — provavelmente só site institucional; boa fonte de contato direto pra ocorrência local (alagamento, desabamento) que não sobe pro S2iD.
+
+Escolham uma das API's para começar a investigação do projeto Integrador.

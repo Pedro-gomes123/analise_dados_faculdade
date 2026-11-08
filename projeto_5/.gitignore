@@ -1,0 +1,18 @@
+# Credenciais e arquivos locais
+.env
+.env.*
+!.env.example
+
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Sistema operacional
+.DS_Store
+
+# Dados locais de depuração
+/mongo/data/raw/*
+!/mongo/data/raw/.gitkeep

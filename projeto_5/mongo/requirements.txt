@@ -1,0 +1,6 @@
+requests
+pymongo
+pandas
+openpyxl
+python-dotenv
+pysus

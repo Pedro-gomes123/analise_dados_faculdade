@@ -103,3 +103,40 @@ CREATE TABLE silver.AnimaisPerconhentos (
     CONSTRAINT UQ_silver_AnimaisPerconhentos UNIQUE (territorio, municipio, codigo_municipio, periodo)
 );
 GO
+
+-- -----------------------------------------------------------------------
+-- silver.SAMU
+-- Chamados SAMU Recife agregados por bairro, semana ISO e tipo de emergência.
+-- Chave: (territorio, bairro, tipo_emergencia, periodo).
+-- -----------------------------------------------------------------------
+IF OBJECT_ID(N'silver.SAMU', N'U') IS NULL
+CREATE TABLE silver.SAMU (
+    id               INT IDENTITY(1,1)  NOT NULL CONSTRAINT PK_silver_SAMU           PRIMARY KEY,
+    territorio       NVARCHAR(100)      NOT NULL,
+    bairro           NVARCHAR(200)      NOT NULL,
+    tipo_emergencia  NVARCHAR(200)      NOT NULL,
+    periodo          NVARCHAR(10)       NOT NULL,
+    casos            INT                NOT NULL,
+    atualizado_em    DATETIMEOFFSET(6)  NOT NULL CONSTRAINT DF_silver_SAMU_atualizado DEFAULT SYSDATETIMEOFFSET(),
+    CONSTRAINT UQ_silver_SAMU UNIQUE (territorio, bairro, tipo_emergencia, periodo)
+);
+GO
+
+-- -----------------------------------------------------------------------
+-- silver.AcidentesTransito
+-- Acidentes de trânsito Recife por bairro, semana ISO e indicador.
+-- Três indicadores por ocorrência: ocorrências, vítimas, vítimas fatais.
+-- Chave: (territorio, bairro, indicador, periodo).
+-- -----------------------------------------------------------------------
+IF OBJECT_ID(N'silver.AcidentesTransito', N'U') IS NULL
+CREATE TABLE silver.AcidentesTransito (
+    id               INT IDENTITY(1,1)  NOT NULL CONSTRAINT PK_silver_AcidentesTransito  PRIMARY KEY,
+    territorio       NVARCHAR(100)      NOT NULL,
+    bairro           NVARCHAR(200)      NOT NULL,
+    indicador        NVARCHAR(100)      NOT NULL,
+    periodo          NVARCHAR(10)       NOT NULL,
+    casos            INT                NOT NULL,
+    atualizado_em    DATETIMEOFFSET(6)  NOT NULL CONSTRAINT DF_silver_Acid_atualizado DEFAULT SYSDATETIMEOFFSET(),
+    CONSTRAINT UQ_silver_AcidentesTransito UNIQUE (territorio, bairro, indicador, periodo)
+);
+GO

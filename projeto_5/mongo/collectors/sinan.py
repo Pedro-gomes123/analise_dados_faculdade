@@ -23,7 +23,7 @@ from collections import defaultdict
 from datetime import date, datetime
 
 from mongo.database.mongodb import carregar_documentos
-from mongo.utils.helpers import dataframe_para_registros, salvar_json_local
+from mongo.utils.storage import dataframe_para_registros, salvar_json_local
 
 logger = logging.getLogger(__name__)
 

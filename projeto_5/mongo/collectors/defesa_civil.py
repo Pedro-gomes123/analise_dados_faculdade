@@ -26,7 +26,8 @@ import pandas as pd
 
 from mongo.config import CKAN_RECIFE
 from mongo.database.mongodb import carregar_documentos
-from mongo.utils.helpers import dataframe_para_registros, get, salvar_json_local
+from mongo.utils.http import get
+from mongo.utils.storage import dataframe_para_registros, salvar_json_local
 
 logger = logging.getLogger(__name__)
 

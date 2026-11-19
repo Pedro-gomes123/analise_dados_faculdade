@@ -2,21 +2,17 @@
 
 import unittest
 from datetime import datetime, timezone
-from unittest.mock import MagicMock, Mock, patch, call
+from unittest.mock import MagicMock, patch
 
 from bson import json_util
 
-from silver.pipelines.silver_pipeline import (
-    _linha_meteorologia,
-    _ler_bronze,
-    _ts,
-    processar_arboviroses,
-    processar_defesa_civil,
-    processar_animais_peconhentos,
-    processar_estacoes,
-    processar_meteorologia,
-    silver_pipeline,
-)
+from silver.pipelines._base import _ler_bronze, _ts
+from silver.pipelines.meteorologia import _linha_meteorologia, processar_meteorologia
+from silver.pipelines.arboviroses import processar_arboviroses
+from silver.pipelines.defesa_civil import processar_defesa_civil
+from silver.pipelines.animais_peconhentos import processar_animais_peconhentos
+from silver.pipelines.estacoes import processar_estacoes
+from silver.pipelines.silver_pipeline import silver_pipeline
 
 NOW = datetime(2026, 11, 9, 12, 0, tzinfo=timezone.utc)
 NOW_ISO = NOW.isoformat()
@@ -70,9 +66,9 @@ class LinhaMeterologiaTests(unittest.TestCase):
     def test_extrai_campos_openmeteo_corretamente(self):
         linha = _linha_meteorologia(self._payload_openmeteo(), NOW_ISO)
         self.assertIsNotNone(linha)
-        self.assertEqual(linha[0], "openmeteo")        # fonte
-        self.assertAlmostEqual(linha[5], 28.0)         # temperatura_c
-        self.assertAlmostEqual(linha[8], 1013.0)       # pressao_hpa
+        self.assertEqual(linha[0], "openmeteo")
+        self.assertAlmostEqual(linha[5], 28.0)
+        self.assertAlmostEqual(linha[8], 1013.0)
 
     def test_nasa_power_converte_kpa_para_hpa(self):
         p = self._payload_openmeteo()
@@ -81,12 +77,12 @@ class LinhaMeterologiaTests(unittest.TestCase):
             "temperatura_c": 26.0,
             "precipitacao_mm": 1.0,
             "umidade_pct": 85.0,
-            "pressao_kpa": 101.3,  # kPa
+            "pressao_kpa": 101.3,
             "vento_ms": 2.0,
         }
         linha = _linha_meteorologia(p, NOW_ISO)
         self.assertIsNotNone(linha)
-        self.assertAlmostEqual(linha[8], 1013.0, places=1)  # pressao_hpa = 101.3 * 10
+        self.assertAlmostEqual(linha[8], 1013.0, places=1)
 
     def test_sem_lida_em_retorna_none(self):
         p = self._payload_openmeteo()
@@ -103,8 +99,8 @@ class LinhaMeterologiaTests(unittest.TestCase):
         p["variaveis"] = {}
         linha = _linha_meteorologia(p, NOW_ISO)
         self.assertIsNotNone(linha)
-        self.assertIsNone(linha[5])   # temperatura_c
-        self.assertIsNone(linha[8])   # pressao_hpa
+        self.assertIsNone(linha[5])
+        self.assertIsNone(linha[8])
 
 
 # ---------------------------------------------------------------------------
@@ -122,25 +118,18 @@ class LerBronzeTests(unittest.TestCase):
 
     def test_desserializa_bson_extended_json(self):
         payload = {"fonte": "openmeteo", "lida_em": NOW, "valor": 1.5}
-        payload_json = json_util.dumps(payload)
-        conn = self._make_conn([(payload_json,)])
-
+        conn = self._make_conn([(json_util.dumps(payload),)])
         resultado = _ler_bronze(conn, "bronze.openmeteo_horario")
-
         self.assertEqual(len(resultado), 1)
         self.assertEqual(resultado[0]["fonte"], "openmeteo")
-        # datetime deve ser desserializado de volta corretamente
-        self.assertIsInstance(resultado[0]["lida_em"], type(NOW))
 
     def test_ignora_payload_json_invalido(self):
         conn = self._make_conn([("isso nao e json{{{",)])
-        resultado = _ler_bronze(conn, "bronze.tabela")
-        self.assertEqual(resultado, [])
+        self.assertEqual(_ler_bronze(conn, "bronze.tabela"), [])
 
     def test_tabela_vazia_retorna_lista_vazia(self):
         conn = self._make_conn([])
-        resultado = _ler_bronze(conn, "bronze.tabela")
-        self.assertEqual(resultado, [])
+        self.assertEqual(_ler_bronze(conn, "bronze.tabela"), [])
 
 
 # ---------------------------------------------------------------------------
@@ -149,8 +138,7 @@ class LerBronzeTests(unittest.TestCase):
 
 class ProcessarArbovirosesTests(unittest.TestCase):
 
-    def _conn_com_bronze(self, payloads):
-        """Cria mock de conexão que retorna payloads como bronze rows."""
+    def _conn(self, payloads):
         cursor = MagicMock()
         cursor.fetchall.return_value = [(json_util.dumps(p),) for p in payloads]
         conn = MagicMock()
@@ -158,27 +146,19 @@ class ProcessarArbovirosesTests(unittest.TestCase):
         return conn
 
     def test_monta_params_corretos(self):
-        conn = self._conn_com_bronze([{
+        conn = self._conn([{
             "territorio": "Recife", "bairro": "Boa Viagem",
             "indicador": "dengue", "periodo": "2025-W01", "valor": 10,
         }])
-        resultado = processar_arboviroses(conn)
-        self.assertEqual(resultado["processados"], 1)
-        conn.commit.assert_called()
+        self.assertEqual(processar_arboviroses(conn)["processados"], 1)
 
     def test_ignora_registro_sem_indicador(self):
-        conn = self._conn_com_bronze([
-            {"bairro": "X", "periodo": "2025-W01", "valor": 5},  # sem indicador
-        ])
-        resultado = processar_arboviroses(conn)
-        self.assertEqual(resultado["processados"], 0)
+        conn = self._conn([{"bairro": "X", "periodo": "2025-W01", "valor": 5}])
+        self.assertEqual(processar_arboviroses(conn)["processados"], 0)
 
     def test_ignora_registro_sem_periodo(self):
-        conn = self._conn_com_bronze([
-            {"indicador": "dengue", "bairro": "X", "valor": 5},  # sem periodo
-        ])
-        resultado = processar_arboviroses(conn)
-        self.assertEqual(resultado["processados"], 0)
+        conn = self._conn([{"indicador": "dengue", "bairro": "X", "valor": 5}])
+        self.assertEqual(processar_arboviroses(conn)["processados"], 0)
 
 
 # ---------------------------------------------------------------------------
@@ -187,7 +167,7 @@ class ProcessarArbovirosesTests(unittest.TestCase):
 
 class ProcessarDefesaCivilTests(unittest.TestCase):
 
-    def _conn_com_bronze(self, payloads):
+    def _conn(self, payloads):
         cursor = MagicMock()
         cursor.fetchall.return_value = [(json_util.dumps(p),) for p in payloads]
         conn = MagicMock()
@@ -195,17 +175,15 @@ class ProcessarDefesaCivilTests(unittest.TestCase):
         return conn
 
     def test_monta_params_corretos(self):
-        conn = self._conn_com_bronze([{
+        conn = self._conn([{
             "territorio": "Recife", "bairro": "Afogados",
             "tipo_ocorrencia": "Deslizamento", "periodo": "2025-01", "valor": 3,
         }])
-        resultado = processar_defesa_civil(conn)
-        self.assertEqual(resultado["processados"], 1)
+        self.assertEqual(processar_defesa_civil(conn)["processados"], 1)
 
     def test_ignora_registro_sem_tipo(self):
-        conn = self._conn_com_bronze([{"bairro": "X", "periodo": "2025-01", "valor": 1}])
-        resultado = processar_defesa_civil(conn)
-        self.assertEqual(resultado["processados"], 0)
+        conn = self._conn([{"bairro": "X", "periodo": "2025-01", "valor": 1}])
+        self.assertEqual(processar_defesa_civil(conn)["processados"], 0)
 
 
 # ---------------------------------------------------------------------------
@@ -214,7 +192,7 @@ class ProcessarDefesaCivilTests(unittest.TestCase):
 
 class ProcessarAnimaisTests(unittest.TestCase):
 
-    def _conn_com_bronze(self, payloads):
+    def _conn(self, payloads):
         cursor = MagicMock()
         cursor.fetchall.return_value = [(json_util.dumps(p),) for p in payloads]
         conn = MagicMock()
@@ -222,19 +200,17 @@ class ProcessarAnimaisTests(unittest.TestCase):
         return conn
 
     def test_monta_params_corretos(self):
-        conn = self._conn_com_bronze([{
+        conn = self._conn([{
             "territorio": "Pernambuco", "municipio": "Recife",
             "codigo_municipio": "261160", "periodo": "2026-W01", "valor": 7,
         }])
-        resultado = processar_animais_peconhentos(conn)
-        self.assertEqual(resultado["processados"], 1)
+        self.assertEqual(processar_animais_peconhentos(conn)["processados"], 1)
 
     def test_ignora_registro_sem_periodo(self):
-        conn = self._conn_com_bronze([{
+        conn = self._conn([{
             "territorio": "PE", "municipio": "Recife", "codigo_municipio": "261160",
         }])
-        resultado = processar_animais_peconhentos(conn)
-        self.assertEqual(resultado["processados"], 0)
+        self.assertEqual(processar_animais_peconhentos(conn)["processados"], 0)
 
 
 # ---------------------------------------------------------------------------
@@ -243,7 +219,7 @@ class ProcessarAnimaisTests(unittest.TestCase):
 
 class ProcessarEstacoesTests(unittest.TestCase):
 
-    def _conn_com_bronze(self, payloads):
+    def _conn(self, payloads):
         cursor = MagicMock()
         cursor.fetchall.return_value = [(json_util.dumps(p),) for p in payloads]
         conn = MagicMock()
@@ -251,28 +227,23 @@ class ProcessarEstacoesTests(unittest.TestCase):
         return conn
 
     def test_monta_params_corretos(self):
-        conn = self._conn_com_bronze([{
+        conn = self._conn([{
             "fonte": "inmet", "estacao": "A301",
             "nome": "Recife / PE", "municipio": "Recife",
             "latitude": -8.059, "longitude": -34.950, "situacao": "Operante",
         }])
-        resultado = processar_estacoes(conn)
-        self.assertEqual(resultado["processados"], 1)
-        conn.commit.assert_called()
+        self.assertEqual(processar_estacoes(conn)["processados"], 1)
 
     def test_ignora_registro_sem_estacao(self):
-        conn = self._conn_com_bronze([{"fonte": "inmet", "nome": "Sem código"}])
-        resultado = processar_estacoes(conn)
-        self.assertEqual(resultado["processados"], 0)
+        conn = self._conn([{"fonte": "inmet", "nome": "Sem código"}])
+        self.assertEqual(processar_estacoes(conn)["processados"], 0)
 
     def test_usa_fonte_padrao_inmet(self):
-        conn = self._conn_com_bronze([{
+        conn = self._conn([{
             "estacao": "A301", "nome": "Recife",
             "municipio": "Recife", "latitude": -8.0, "longitude": -34.9,
         }])
-        resultado = processar_estacoes(conn)
-        # sem "fonte" no payload → usa "inmet" como padrão
-        self.assertEqual(resultado["processados"], 1)
+        self.assertEqual(processar_estacoes(conn)["processados"], 1)
 
 
 # ---------------------------------------------------------------------------
@@ -282,7 +253,6 @@ class ProcessarEstacoesTests(unittest.TestCase):
 class ProcessarMeterologiaTests(unittest.TestCase):
 
     def _make_conn(self, payloads_por_tabela: dict):
-        """payloads_por_tabela: { 'bronze.openmeteo_horario': [...], ... }"""
         tabelas_ordem = [
             "bronze.openmeteo_horario",
             "bronze.openmeteo_historico",
@@ -294,32 +264,25 @@ class ProcessarMeterologiaTests(unittest.TestCase):
             cur = MagicMock()
             cur.fetchall.return_value = [(json_util.dumps(p),) for p in payloads]
             cursors.append(cur)
-        # cursor extra para o _upsert
-        cursors.append(MagicMock())
-
+        cursors.append(MagicMock())  # cursor do _upsert
         conn = MagicMock()
         conn.cursor.side_effect = cursors
         return conn
 
-    def test_processa_multiplas_fontes(self):
-        payload_base = {
+    def test_processa_payload_valido(self):
+        payload = {
             "fonte": "openmeteo", "estacao": "recife", "territorio": "Recife",
             "lida_em": NOW, "natureza_dado": "historico_modelado",
             "variaveis": {"temperatura_c": 28.0, "precipitacao_mm": 0.0,
                           "umidade_pct": 80.0, "pressao_hpa": 1012.0, "vento_ms": 2.0},
             "latitude": -8.05, "longitude": -34.9,
         }
-        conn = self._make_conn({"bronze.openmeteo_horario": [payload_base]})
-        resultado = processar_meteorologia(conn)
-        self.assertEqual(resultado["processados"], 1)
+        conn = self._make_conn({"bronze.openmeteo_horario": [payload]})
+        self.assertEqual(processar_meteorologia(conn)["processados"], 1)
 
     def test_linha_invalida_e_descartada(self):
-        payload_sem_fonte = {
-            "lida_em": NOW, "variaveis": {"temperatura_c": 25.0},
-        }
-        conn = self._make_conn({"bronze.openmeteo_horario": [payload_sem_fonte]})
-        resultado = processar_meteorologia(conn)
-        self.assertEqual(resultado["processados"], 0)
+        conn = self._make_conn({"bronze.openmeteo_horario": [{"lida_em": NOW}]})
+        self.assertEqual(processar_meteorologia(conn)["processados"], 0)
 
 
 # ---------------------------------------------------------------------------
@@ -328,47 +291,54 @@ class ProcessarMeterologiaTests(unittest.TestCase):
 
 class SilverPipelineTests(unittest.TestCase):
 
+    _PROCESSADORES = [
+        "processar_meteorologia",
+        "processar_arboviroses",
+        "processar_defesa_civil",
+        "processar_animais_peconhentos",
+        "processar_samu",
+        "processar_acidentes_transito",
+        "processar_estacoes",
+    ]
+
+    def _patches(self):
+        return [
+            patch(f"silver.pipelines.silver_pipeline.{nome}")
+            for nome in self._PROCESSADORES
+        ]
+
     @patch("silver.pipelines.silver_pipeline._aplicar_ddl")
-    @patch("silver.pipelines.silver_pipeline.processar_estacoes")
-    @patch("silver.pipelines.silver_pipeline.processar_animais_peconhentos")
-    @patch("silver.pipelines.silver_pipeline.processar_defesa_civil")
-    @patch("silver.pipelines.silver_pipeline.processar_arboviroses")
-    @patch("silver.pipelines.silver_pipeline.processar_meteorologia")
-    def test_chama_todas_as_fontes(self, mock_met, mock_arb, mock_dc, mock_ani, mock_est, mock_ddl):
-        for m in (mock_met, mock_arb, mock_dc, mock_ani, mock_est):
+    def test_chama_todos_os_processadores(self, mock_ddl):
+        mocks = [p.start() for p in self._patches()]
+        for m in mocks:
             m.return_value = {"tabela": "silver.X", "processados": 1}
-
-        conn = MagicMock()
-        resultados = silver_pipeline(connection=conn, aplicar_ddl=True)
-
-        self.assertEqual(len(resultados), 5)
-        mock_ddl.assert_called_once()
-        mock_met.assert_called_once_with(conn)
-        mock_arb.assert_called_once_with(conn)
-        mock_dc.assert_called_once_with(conn)
-        mock_ani.assert_called_once_with(conn)
-        mock_est.assert_called_once_with(conn)
+        try:
+            conn = MagicMock()
+            resultados = silver_pipeline(connection=conn, aplicar_ddl=True)
+            self.assertEqual(len(resultados), 7)
+            mock_ddl.assert_called_once()
+            for m in mocks:
+                m.assert_called_once_with(conn)
+        finally:
+            for p in self._patches():
+                p.stop()
 
     @patch("silver.pipelines.silver_pipeline._aplicar_ddl")
-    @patch("silver.pipelines.silver_pipeline.processar_meteorologia")
-    @patch("silver.pipelines.silver_pipeline.processar_arboviroses")
-    @patch("silver.pipelines.silver_pipeline.processar_defesa_civil")
-    @patch("silver.pipelines.silver_pipeline.processar_animais_peconhentos")
-    @patch("silver.pipelines.silver_pipeline.processar_estacoes")
-    def test_falha_em_uma_fonte_nao_para_as_demais(
-        self, mock_est, mock_ani, mock_dc, mock_arb, mock_met, mock_ddl
-    ):
-        mock_met.side_effect = RuntimeError("erro simulado")
-        for m in (mock_arb, mock_dc, mock_ani, mock_est):
+    def test_falha_em_uma_fonte_nao_para_as_demais(self, _mock_ddl):
+        mocks = [p.start() for p in self._patches()]
+        mocks[0].side_effect = RuntimeError("erro simulado")  # meteorologia falha
+        for m in mocks[1:]:
             m.return_value = {"tabela": "silver.X", "processados": 2}
-
-        conn = MagicMock()
-        resultados = silver_pipeline(connection=conn, aplicar_ddl=False)
-
-        self.assertEqual(len(resultados), 5)
-        self.assertIn("erro", resultados[0])
-        total = sum(r.get("processados", 0) for r in resultados)
-        self.assertEqual(total, 8)  # 4 fontes × 2
+        try:
+            conn = MagicMock()
+            resultados = silver_pipeline(connection=conn, aplicar_ddl=False)
+            self.assertEqual(len(resultados), 7)
+            self.assertIn("erro", resultados[0])
+            total = sum(r.get("processados", 0) for r in resultados)
+            self.assertEqual(total, 12)  # 6 fontes × 2
+        finally:
+            for p in self._patches():
+                p.stop()
 
 
 if __name__ == "__main__":

@@ -109,3 +109,29 @@ CREATE TABLE bronze.sinan_animais_peconhentos (
     exportado_em    DATETIMEOFFSET(6)  NOT NULL CONSTRAINT DF_bronze_sinan_animais_exp       DEFAULT SYSDATETIMEOFFSET()
 );
 GO
+
+IF OBJECT_ID(N'bronze.recife_samu', N'U') IS NULL
+CREATE TABLE bronze.recife_samu (
+    [_id]           NVARCHAR(64)       NOT NULL CONSTRAINT PK_bronze_recife_samu             PRIMARY KEY,
+    fonte           NVARCHAR(100)      NULL,
+    tipo_dado       NVARCHAR(100)      NULL,
+    municipio       NVARCHAR(200)      NULL,
+    ingestao_ts     DATETIMEOFFSET(6)  NULL,
+    payload_json    NVARCHAR(MAX)      NULL,
+    documento_json  NVARCHAR(MAX)      NULL,
+    exportado_em    DATETIMEOFFSET(6)  NOT NULL CONSTRAINT DF_bronze_recife_samu_exp          DEFAULT SYSDATETIMEOFFSET()
+);
+GO
+
+IF OBJECT_ID(N'bronze.recife_acidentes_transito', N'U') IS NULL
+CREATE TABLE bronze.recife_acidentes_transito (
+    [_id]           NVARCHAR(64)       NOT NULL CONSTRAINT PK_bronze_recife_acidentes        PRIMARY KEY,
+    fonte           NVARCHAR(100)      NULL,
+    tipo_dado       NVARCHAR(100)      NULL,
+    municipio       NVARCHAR(200)      NULL,
+    ingestao_ts     DATETIMEOFFSET(6)  NULL,
+    payload_json    NVARCHAR(MAX)      NULL,
+    documento_json  NVARCHAR(MAX)      NULL,
+    exportado_em    DATETIMEOFFSET(6)  NOT NULL CONSTRAINT DF_bronze_recife_acidentes_exp     DEFAULT SYSDATETIMEOFFSET()
+);
+GO

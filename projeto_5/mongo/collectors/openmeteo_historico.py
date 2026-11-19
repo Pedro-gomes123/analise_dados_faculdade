@@ -14,7 +14,9 @@ from datetime import date, timedelta
 
 from mongo.config import LAT, LON
 from mongo.database.mongodb import carregar_documentos
-from mongo.utils.helpers import get, para_numero, salvar_json_local, utc_datetime
+from mongo.utils.http import get
+from mongo.utils.normalizers import para_numero, utc_datetime
+from mongo.utils.storage import salvar_json_local
 
 logger = logging.getLogger(__name__)
 

@@ -4,12 +4,6 @@ Passo 2 da pipeline medallion:
     python3 -m bronze.main
 
 Pré-requisito: mongo.main deve ter sido executado antes para popular o MongoDB.
-
-Responsabilidade:
-- Abre conexões com MongoDB e SQL Server.
-- Chama pipeline_bronze que copia todas as coleções MongoDB para bronze.
-- Fecha as conexões e imprime o resumo.
-- Retorna código de saída 0 (sucesso) ou 1 (falha) para o shell/CI.
 """
 
 import logging
@@ -21,22 +15,20 @@ from mongo.database.mongodb import conectar_mongodb
 
 
 def main() -> int:
-    """Lê as coleções MongoDB e persiste os documentos nas tabelas bronze do SQL Server."""
-    # LOG_LEVEL da variável de ambiente permite ajustar verbosidade em produção (ex: DEBUG).
-    # Padrão INFO mostra progresso sem detalhar cada linha processada.
     logging.basicConfig(
         level=os.getenv("LOG_LEVEL", "INFO"),
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",
     )
+    logger = logging.getLogger(__name__)
 
-    # conectar_mongodb: lê MONGODB_URI do .env e cria cliente PyMongo.
-    # A conexão é passada para pipeline_bronze que a usa sem fechar.
-    cliente = conectar_mongodb()
     try:
-        # MONGO_DATABASE = "operacional_db" (definido em mongo/config.py).
-        resultados = pipeline_bronze(cliente[MONGO_DATABASE])
+        cliente = conectar_mongodb()
+    except Exception as erro:
+        logger.error("Não foi possível conectar ao MongoDB (tipo=%s).", type(erro).__name__)
+        return 1
 
-        # Soma as estatísticas de todas as coleções exportadas.
+    try:
+        resultados = pipeline_bronze(cliente[MONGO_DATABASE])
         documentos = sum(item["documentos"] for item in resultados)
         inseridos  = sum(item["inseridos"]  for item in resultados)
         print(
@@ -44,11 +36,12 @@ def main() -> int:
             f"{inseridos} inseridos nas tabelas SQL Server."
         )
         return 0
+    except Exception as erro:
+        logger.error("Pipeline Bronze falhou (tipo=%s).", type(erro).__name__)
+        return 1
     finally:
-        # finally garante que a conexão com o MongoDB seja fechada mesmo em exceção.
         cliente.close()
 
 
 if __name__ == "__main__":
-    # raise SystemExit em vez de sys.exit: mais idiomático em Python 3.
     raise SystemExit(main())

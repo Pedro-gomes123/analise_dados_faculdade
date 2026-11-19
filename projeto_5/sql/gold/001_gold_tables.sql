@@ -5,9 +5,26 @@ IF SCHEMA_ID(N'gold') IS NULL EXEC(N'CREATE SCHEMA gold');
 GO
 
 -- -----------------------------------------------------------------------
+-- Migração: recria gold.leitura_climatica se ainda estiver no formato longo
+-- (coluna "variavel"). O formato atual é largo: uma coluna por variável.
+-- -----------------------------------------------------------------------
+IF OBJECT_ID(N'gold.leitura_climatica', N'U') IS NOT NULL
+   AND EXISTS (
+       SELECT 1 FROM sys.columns
+       WHERE object_id = OBJECT_ID(N'gold.leitura_climatica')
+         AND name = N'variavel'
+   )
+BEGIN
+    DROP TABLE gold.leitura_climatica;
+END
+GO
+
+-- -----------------------------------------------------------------------
 -- gold.leitura_climatica
--- Uma linha por variável medida, em formato longo (UNPIVOT de silver.Meteorologia).
--- Chave: (fonte, estacao, variavel, lida_em).
+-- Formato largo: uma linha por (fonte, estacao, lida_em).
+-- Cada variável climática ocupa sua própria coluna NULL (pode não estar
+-- disponível em todas as fontes para todos os horários).
+-- Chave: (fonte, estacao, lida_em).
 -- -----------------------------------------------------------------------
 IF OBJECT_ID(N'gold.leitura_climatica', N'U') IS NULL
 CREATE TABLE gold.leitura_climatica (
@@ -15,12 +32,14 @@ CREATE TABLE gold.leitura_climatica (
     fonte           NVARCHAR(50)       NOT NULL,
     estacao         NVARCHAR(100)      NOT NULL,
     territorio      NVARCHAR(100)      NOT NULL,
-    variavel        NVARCHAR(50)       NOT NULL,
-    valor           FLOAT              NOT NULL,
     lida_em         DATETIMEOFFSET(6)  NOT NULL,
     natureza_dado   NVARCHAR(50)       NULL,
+    temperatura_c   FLOAT              NULL,
+    precipitacao_mm FLOAT              NULL,
+    umidade_pct     FLOAT              NULL,
+    pressao_hpa     FLOAT              NULL,
     atualizado_em   DATETIMEOFFSET(6)  NOT NULL CONSTRAINT DF_gold_leitura_atualizado DEFAULT SYSDATETIMEOFFSET(),
-    CONSTRAINT UQ_gold_leitura_climatica UNIQUE (fonte, estacao, variavel, lida_em)
+    CONSTRAINT UQ_gold_leitura_climatica UNIQUE (fonte, estacao, lida_em)
 );
 GO
 
@@ -31,12 +50,15 @@ IF NOT EXISTS (
 )
 CREATE INDEX IX_gold_leitura_climatica_lida_em
     ON gold.leitura_climatica (lida_em DESC)
-    INCLUDE (fonte, estacao, territorio, variavel, valor, natureza_dado);
+    INCLUDE (fonte, estacao, territorio, natureza_dado,
+             temperatura_c, precipitacao_mm, umidade_pct, pressao_hpa);
 GO
 
 -- -----------------------------------------------------------------------
 -- gold.estacao
 -- Metadados das estações (origem: silver.Estacoes / INMET).
+-- Mantida no schema para uso futuro; população suspensa enquanto
+-- silver.Estacoes não receber dados do INMET.
 -- Chave: (fonte, estacao).
 -- -----------------------------------------------------------------------
 IF OBJECT_ID(N'gold.estacao', N'U') IS NULL
@@ -83,6 +105,77 @@ CREATE INDEX IX_gold_indicador_territorio_periodo
 GO
 
 -- -----------------------------------------------------------------------
+-- gold.v_clima_periodo (VIEW)
+-- Agrega leitura_climatica (horária) em duas granularidades:
+--   • semanal YYYY-WNN  → para JOIN com arboviroses e SINAN
+--   • mensal  YYYY-MM   → para JOIN com defesa civil
+-- Uma linha por (territorio, periodo) em cada granularidade.
+-- precipitacao_mm é somada (chuva acumulada); demais variáveis são médias.
+-- -----------------------------------------------------------------------
+CREATE OR ALTER VIEW gold.v_clima_periodo AS
+-- Agregação semanal (formato "2026-W44")
+SELECT
+    territorio,
+    CAST(DATEPART(YEAR,     lida_em) AS NVARCHAR(4))
+        + N'-W'
+        + RIGHT(N'0' + CAST(DATEPART(ISO_WEEK, lida_em) AS NVARCHAR(2)), 2) AS periodo,
+    AVG(temperatura_c)   AS avg_temperatura_c,
+    SUM(precipitacao_mm) AS sum_precipitacao_mm,
+    AVG(umidade_pct)     AS avg_umidade_pct,
+    AVG(pressao_hpa)     AS avg_pressao_hpa,
+    COUNT(*)             AS n_leituras
+FROM gold.leitura_climatica
+GROUP BY
+    territorio,
+    CAST(DATEPART(YEAR,     lida_em) AS NVARCHAR(4))
+        + N'-W'
+        + RIGHT(N'0' + CAST(DATEPART(ISO_WEEK, lida_em) AS NVARCHAR(2)), 2)
+
+UNION ALL
+
+-- Agregação mensal (formato "2026-11")
+SELECT
+    territorio,
+    FORMAT(lida_em, 'yyyy-MM') AS periodo,
+    AVG(temperatura_c),
+    SUM(precipitacao_mm),
+    AVG(umidade_pct),
+    AVG(pressao_hpa),
+    COUNT(*)
+FROM gold.leitura_climatica
+GROUP BY territorio, FORMAT(lida_em, 'yyyy-MM');
+GO
+
+-- -----------------------------------------------------------------------
+-- gold.v_correlacao (VIEW)
+-- Cruza indicador_territorio com v_clima_periodo pelo período.
+-- Uma linha por (bairro, indicador, periodo) com clima agregado ao lado.
+-- Para SINAN (territorio=Pernambuco), usa Recife como proxy climático
+-- já que a coleta cobre apenas a capital.
+-- -----------------------------------------------------------------------
+CREATE OR ALTER VIEW gold.v_correlacao AS
+SELECT
+    i.territorio,
+    i.bairro,
+    i.indicador,
+    i.periodo,
+    i.valor                 AS casos,
+    i.fonte                 AS fonte_indicador,
+    c.avg_temperatura_c,
+    c.sum_precipitacao_mm,
+    c.avg_umidade_pct,
+    c.avg_pressao_hpa,
+    c.n_leituras            AS n_leituras_clima
+FROM gold.indicador_territorio i
+LEFT JOIN gold.v_clima_periodo c
+    ON  c.territorio = CASE
+                           WHEN i.territorio = N'Pernambuco' THEN N'Recife'
+                           ELSE i.territorio
+                       END
+    AND c.periodo    = i.periodo;
+GO
+
+-- -----------------------------------------------------------------------
 -- gold.fonte_status (VIEW — sempre atual, sem dados duplicados)
 -- Última ingestão de cada fonte a partir das tabelas bronze.
 -- -----------------------------------------------------------------------
@@ -104,6 +197,10 @@ FROM (
     SELECT fonte, ingestao_ts FROM bronze.recife_defesa_civil
     UNION ALL
     SELECT fonte, ingestao_ts FROM bronze.sinan_animais_peconhentos
+    UNION ALL
+    SELECT fonte, ingestao_ts FROM bronze.recife_samu
+    UNION ALL
+    SELECT fonte, ingestao_ts FROM bronze.recife_acidentes_transito
 ) AS todas
 GROUP BY fonte;
 GO

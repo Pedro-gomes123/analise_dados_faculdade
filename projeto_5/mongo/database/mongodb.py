@@ -19,7 +19,7 @@ from datetime import datetime, timezone
 # MongoDB Atlas (cloud) via URI mongodb+srv://.
 from pymongo import MongoClient, UpdateOne
 
-from mongo.utils.helpers import normalizar_registro
+from mongo.utils.normalizers import normalizar_registro
 
 logger = logging.getLogger(__name__)
 

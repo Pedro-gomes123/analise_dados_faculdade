@@ -17,6 +17,7 @@ Por que MongoDB como camada de staging?
 """
 
 import logging
+import os
 import sys
 
 from mongo.config import MONGO_DATABASE
@@ -27,12 +28,14 @@ from mongo.collectors.nasa_power import pipeline_nasa_power
 from mongo.collectors.recife import pipeline_recife_arboviroses
 from mongo.collectors.defesa_civil import pipeline_defesa_civil
 from mongo.collectors.sinan import pipeline_sinan
+from mongo.collectors.samu import pipeline_samu
+from mongo.collectors.acidentes_transito import pipeline_acidentes_transito
 
 # basicConfig define o formato global de log para toda a execução.
 # %(asctime)s: timestamp ISO  |  %(levelname)s: INFO/WARNING/ERROR
 # %(name)s: nome do módulo (ex: "mongo.collectors.openmeteo")
 logging.basicConfig(
-    level=logging.INFO,
+    level=os.getenv("LOG_LEVEL", "INFO"),
     format="%(asctime)s %(levelname)s %(name)s: %(message)s",
 )
 logger = logging.getLogger(__name__)
@@ -69,12 +72,14 @@ def main() -> int:
         # Lista de pares (nome legível, função de pipeline).
         # O nome é usado apenas em logs — não afeta a execução.
         pipelines = [
-            ("Open-Meteo Forecast",   pipeline_openmeteo),
-            ("Open-Meteo Archive ERA5", pipeline_openmeteo_historico),
-            ("NASA POWER",            pipeline_nasa_power),
-            ("Dados Abertos Recife",  pipeline_recife_arboviroses),
-            ("Defesa Civil Recife",   pipeline_defesa_civil),
-            ("PySUS / SINAN",         pipeline_sinan),
+            ("Open-Meteo Forecast",        pipeline_openmeteo),
+            ("Open-Meteo Archive ERA5",    pipeline_openmeteo_historico),
+            ("NASA POWER",                 pipeline_nasa_power),
+            ("Dados Abertos Recife",       pipeline_recife_arboviroses),
+            ("Defesa Civil Recife",        pipeline_defesa_civil),
+            ("PySUS / SINAN",              pipeline_sinan),
+            ("SAMU Recife",                pipeline_samu),
+            ("Acidentes de Trânsito",      pipeline_acidentes_transito),
         ]
 
         for nome, funcao in pipelines:

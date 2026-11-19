@@ -151,54 +151,50 @@ def _ts(valor) -> str | None:
 # leitura_climatica — UNPIVOT de silver.Meteorologia
 # ---------------------------------------------------------------------------
 
-# Template MERGE para gold.leitura_climatica.
-# Chave de idempotência: (fonte, estacao, variavel, lida_em).
-# Isso garante uma linha por medição de cada variável por horário por fonte.
+# Template MERGE para gold.leitura_climatica (formato largo).
+# Chave de idempotência: (fonte, estacao, lida_em) — uma linha por horário por fonte.
+# Cada variável é uma coluna NULL; a linha existe mesmo que algumas variáveis
+# não estejam disponíveis para aquela fonte/horário.
 _MERGE_LEITURA = """\
 MERGE gold.leitura_climatica WITH (HOLDLOCK) AS tgt
 USING (VALUES (
-    ?, ?, ?, ?, ?,
+    ?, ?, ?,
     CONVERT(datetimeoffset(6), ?),
-    ?,
+    ?, ?, ?, ?, ?,
     CONVERT(datetimeoffset(6), ?)
-)) AS src (fonte, estacao, territorio, variavel, valor, lida_em, natureza_dado, atualizado_em)
-ON  tgt.fonte    = src.fonte
-AND tgt.estacao  = src.estacao
-AND tgt.variavel = src.variavel
-AND tgt.lida_em  = src.lida_em
+)) AS src (fonte, estacao, territorio, lida_em, natureza_dado,
+           temperatura_c, precipitacao_mm, umidade_pct, pressao_hpa, atualizado_em)
+ON  tgt.fonte   = src.fonte
+AND tgt.estacao = src.estacao
+AND tgt.lida_em = src.lida_em
 WHEN NOT MATCHED THEN
-    INSERT (fonte, estacao, territorio, variavel, valor, lida_em, natureza_dado, atualizado_em)
-    VALUES (src.fonte, src.estacao, src.territorio, src.variavel, src.valor,
-            src.lida_em, src.natureza_dado, src.atualizado_em)
+    INSERT (fonte, estacao, territorio, lida_em, natureza_dado,
+            temperatura_c, precipitacao_mm, umidade_pct, pressao_hpa, atualizado_em)
+    VALUES (src.fonte, src.estacao, src.territorio, src.lida_em, src.natureza_dado,
+            src.temperatura_c, src.precipitacao_mm, src.umidade_pct, src.pressao_hpa,
+            src.atualizado_em)
 WHEN MATCHED THEN UPDATE SET
-    valor         = src.valor,
-    atualizado_em = src.atualizado_em;
+    temperatura_c   = src.temperatura_c,
+    precipitacao_mm = src.precipitacao_mm,
+    umidade_pct     = src.umidade_pct,
+    pressao_hpa     = src.pressao_hpa,
+    natureza_dado   = src.natureza_dado,
+    atualizado_em   = src.atualizado_em;
 """
-
-# Lista de variáveis a "despivotar" — cada linha do silver vira 4 linhas no gold.
-# A ordem deve corresponder aos campos lidos no SELECT de silver.Meteorologia.
-_VARIAVEIS_MET = ["temperatura_c", "precipitacao_mm", "umidade_pct", "pressao_hpa"]
 
 
 def processar_leitura_climatica(connection) -> dict:
-    """Converte silver.Meteorologia para o formato longo de gold.leitura_climatica.
+    """Copia silver.Meteorologia para gold.leitura_climatica no formato largo.
 
-    Realiza o UNPIVOT das colunas de variáveis climáticas (temperatura_c,
-    precipitacao_mm, umidade_pct, pressao_hpa) em linhas separadas — uma linha
-    por (fonte, estacao, variavel, lida_em). Valores NULL são omitidos para não
-    gerar linhas sem informação útil.
+    Formato largo: uma linha por (fonte, estacao, lida_em) com as quatro variáveis
+    climáticas como colunas separadas. É o mesmo schema do silver.Meteorologia,
+    mas exposto na camada gold para consumo direto pelo app.
 
-    Por que formato longo (UNPIVOT)?
-    O app precisa consultar "todas as variáveis desta estação neste período" ou
-    "todos os pontos de temperatura_c esta semana". Com formato largo (uma coluna
-    por variável), cada query exigiria saber quais colunas existem. Com formato
-    longo, basta filtrar por `variavel = 'temperatura_c'`.
-
-    Exemplo de saída para uma linha do silver com 4 variáveis preenchidas:
-        fonte="openmeteo", variavel="temperatura_c",    valor=28.5, lida_em=...
-        fonte="openmeteo", variavel="precipitacao_mm",  valor=0.0,  lida_em=...
-        fonte="openmeteo", variavel="umidade_pct",      valor=82.0, lida_em=...
-        fonte="openmeteo", variavel="pressao_hpa",      valor=1012.3, lida_em=...
+    Por que formato largo (e não longo/UNPIVOT)?
+    As quatro variáveis (temperatura, precipitação, umidade, pressão) compõem
+    juntas uma "leitura" — fazem sentido como um conjunto. O app exibe os quatro
+    valores para o mesmo horário em um único card/componente. Com formato largo,
+    uma única linha traz tudo que o componente precisa, sem JOIN ou GROUP BY.
 
     Args:
         connection: Conexão pyodbc ativa para o SQL Server.
@@ -209,7 +205,6 @@ def processar_leitura_climatica(connection) -> dict:
     agora = _ts(datetime.now(timezone.utc))
     cursor = connection.cursor()
     try:
-        # Lê apenas os campos necessários do silver — evita transferir colunas não usadas.
         cursor.execute("""\
             SELECT fonte, estacao, territorio, lida_em, natureza_dado,
                    temperatura_c, precipitacao_mm, umidade_pct, pressao_hpa
@@ -219,18 +214,13 @@ def processar_leitura_climatica(connection) -> dict:
     finally:
         cursor.close()
 
-    params = []
-    for row in rows:
-        fonte, estacao, territorio, lida_em, natureza_dado, temp, precip, umid, pressao = row
-        lida_em_str = _ts(lida_em)
-        # zip paralelo entre _VARIAVEIS_MET e os valores — 4 iterações por linha do silver.
-        for variavel, valor in zip(_VARIAVEIS_MET, [temp, precip, umid, pressao]):
-            # Omite variáveis com valor NULL — não gera linha sem dado.
-            if valor is not None:
-                params.append((
-                    fonte, estacao, territorio, variavel, valor,
-                    lida_em_str, natureza_dado, agora,
-                ))
+    # Uma tupla por linha do silver — sem UNPIVOT, cópia direta.
+    params = [
+        (fonte, estacao, territorio, _ts(lida_em), natureza_dado,
+         temp, precip, umid, pressao, agora)
+        for fonte, estacao, territorio, lida_em, natureza_dado,
+            temp, precip, umid, pressao in rows
+    ]
 
     inseridos = _upsert(connection, "gold.leitura_climatica", _MERGE_LEITURA, params)
     logger.info("gold.leitura_climatica: %d linhas processadas", inseridos)

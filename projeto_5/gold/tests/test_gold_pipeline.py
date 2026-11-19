@@ -7,7 +7,6 @@ from unittest.mock import MagicMock, patch
 from gold.pipelines.gold_pipeline import (
     _ts,
     processar_leitura_climatica,
-    processar_estacao,
     processar_indicador_territorio,
     gold_pipeline,
 )
@@ -34,7 +33,7 @@ class TsTests(unittest.TestCase):
 
 
 # ---------------------------------------------------------------------------
-# processar_leitura_climatica
+# processar_leitura_climatica — formato largo (uma linha por horário)
 # ---------------------------------------------------------------------------
 
 class ProcessarLeituraClimaticaTests(unittest.TestCase):
@@ -42,22 +41,21 @@ class ProcessarLeituraClimaticaTests(unittest.TestCase):
     def _conn_com_silver(self, rows):
         cursor = MagicMock()
         cursor.fetchall.return_value = rows
-        # cursor extra para o _upsert
         cursor_upsert = MagicMock()
         conn = MagicMock()
         conn.cursor.side_effect = [cursor, cursor_upsert]
         return conn
 
-    def test_gera_linhas_por_variavel(self):
-        # Uma linha do silver → 4 linhas no gold (uma por variável)
+    def test_uma_linha_do_silver_gera_uma_linha_no_gold(self):
+        # Formato largo: 1 linha do silver → 1 linha no gold (não UNPIVOT)
         row = ("openmeteo", "recife_est", "Recife", NOW, "historico_modelado",
                28.0, 0.5, 80.0, 1013.0)
         conn = self._conn_com_silver([row])
         resultado = processar_leitura_climatica(conn)
-        self.assertEqual(resultado["processados"], 4)
+        self.assertEqual(resultado["processados"], 1)
 
-    def test_ignora_variaveis_nulas(self):
-        # Apenas temperatura não nula → 1 linha
+    def test_linha_com_nulos_ainda_inserida(self):
+        # Variáveis NULL são aceitas — colunas nullable no schema
         row = ("openmeteo", "recife_est", "Recife", NOW, "historico_modelado",
                28.0, None, None, None)
         conn = self._conn_com_silver([row])
@@ -70,32 +68,14 @@ class ProcessarLeituraClimaticaTests(unittest.TestCase):
         self.assertEqual(resultado["processados"], 0)
         conn.commit.assert_not_called()
 
-
-# ---------------------------------------------------------------------------
-# processar_estacao
-# ---------------------------------------------------------------------------
-
-class ProcessarEstacaoTests(unittest.TestCase):
-
-    def _conn_com_silver(self, rows):
-        cursor = MagicMock()
-        cursor.fetchall.return_value = rows
-        cursor_upsert = MagicMock()
-        conn = MagicMock()
-        conn.cursor.side_effect = [cursor, cursor_upsert]
-        return conn
-
-    def test_monta_params_corretos(self):
-        row = ("inmet", "A301", "Recife / PE", "Recife", -8.059, -34.950, "Operante")
-        conn = self._conn_com_silver([row])
-        resultado = processar_estacao(conn)
-        self.assertEqual(resultado["processados"], 1)
-        conn.commit.assert_called()
-
-    def test_silver_vazio_retorna_zero(self):
-        conn = self._conn_com_silver([])
-        resultado = processar_estacao(conn)
-        self.assertEqual(resultado["processados"], 0)
+    def test_multiplas_linhas(self):
+        rows = [
+            ("openmeteo", "est_a", "Recife", NOW, "previsao", 28.0, 0.5, 80.0, 1013.0),
+            ("nasa_power", "est_b", "Recife", NOW, "reanalisado", 27.5, 1.0, 85.0, 1010.0),
+        ]
+        conn = self._conn_com_silver(rows)
+        resultado = processar_leitura_climatica(conn)
+        self.assertEqual(resultado["processados"], 2)
 
 
 # ---------------------------------------------------------------------------
@@ -137,60 +117,52 @@ class ProcessarIndicadorTerritorioTests(unittest.TestCase):
             ani_rows=[("Pernambuco", "Caruaru", 3, "2025-W10")],
         )
         resultado = processar_indicador_territorio(conn)
-        # Verifica que o indicador é o nome padronizado
         self.assertEqual(resultado["processados"], 1)
 
 
 # ---------------------------------------------------------------------------
-# gold_pipeline — orquestrador
+# gold_pipeline — orquestrador (processar_estacao removido)
 # ---------------------------------------------------------------------------
 
 class GoldPipelineTests(unittest.TestCase):
 
     @patch("gold.pipelines.gold_pipeline._aplicar_ddl")
     @patch("gold.pipelines.gold_pipeline.processar_indicador_territorio")
-    @patch("gold.pipelines.gold_pipeline.processar_estacao")
     @patch("gold.pipelines.gold_pipeline.processar_leitura_climatica")
-    def test_chama_todas_as_fontes(self, mock_leitura, mock_est, mock_ind, mock_ddl):
-        for m in (mock_leitura, mock_est, mock_ind):
+    def test_chama_dois_processadores(self, mock_leitura, mock_ind, mock_ddl):
+        for m in (mock_leitura, mock_ind):
             m.return_value = {"tabela": "gold.X", "processados": 5}
 
         conn = MagicMock()
         resultados = gold_pipeline(connection=conn, aplicar_ddl=True)
 
-        self.assertEqual(len(resultados), 3)
+        self.assertEqual(len(resultados), 2)
         mock_ddl.assert_called_once()
         mock_leitura.assert_called_once_with(conn)
-        mock_est.assert_called_once_with(conn)
         mock_ind.assert_called_once_with(conn)
 
     @patch("gold.pipelines.gold_pipeline._aplicar_ddl")
-    @patch("gold.pipelines.gold_pipeline.processar_leitura_climatica")
-    @patch("gold.pipelines.gold_pipeline.processar_estacao")
     @patch("gold.pipelines.gold_pipeline.processar_indicador_territorio")
+    @patch("gold.pipelines.gold_pipeline.processar_leitura_climatica")
     def test_falha_em_uma_fonte_nao_para_as_demais(
-        self, mock_ind, mock_est, mock_leitura, mock_ddl
+        self, mock_leitura, mock_ind, mock_ddl
     ):
         mock_leitura.side_effect = RuntimeError("erro simulado")
-        mock_est.return_value = {"tabela": "gold.estacao", "processados": 16}
         mock_ind.return_value = {"tabela": "gold.indicador_territorio", "processados": 100}
 
         conn = MagicMock()
         resultados = gold_pipeline(connection=conn, aplicar_ddl=False)
 
-        self.assertEqual(len(resultados), 3)
+        self.assertEqual(len(resultados), 2)
         self.assertIn("erro", resultados[0])
         total = sum(r.get("processados", 0) for r in resultados)
-        self.assertEqual(total, 116)
+        self.assertEqual(total, 100)
 
     @patch("gold.pipelines.gold_pipeline._aplicar_ddl")
-    @patch("gold.pipelines.gold_pipeline.processar_leitura_climatica")
-    @patch("gold.pipelines.gold_pipeline.processar_estacao")
     @patch("gold.pipelines.gold_pipeline.processar_indicador_territorio")
-    def test_sem_ddl_nao_chama_aplicar_ddl(
-        self, mock_ind, mock_est, mock_leitura, mock_ddl
-    ):
-        for m in (mock_leitura, mock_est, mock_ind):
+    @patch("gold.pipelines.gold_pipeline.processar_leitura_climatica")
+    def test_sem_ddl_nao_chama_aplicar_ddl(self, mock_leitura, mock_ind, mock_ddl):
+        for m in (mock_leitura, mock_ind):
             m.return_value = {"tabela": "gold.X", "processados": 1}
 
         conn = MagicMock()

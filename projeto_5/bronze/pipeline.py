@@ -28,13 +28,15 @@ logger = logging.getLogger(__name__)
 # A ordem não importa — cada coleção é processada independentemente.
 # Adicionar uma nova fonte: basta incluir o par aqui e criar a tabela no DDL.
 COLECOES_BRONZE = {
-    "inmet_estacoes":             "bronze.inmet_estacoes",
-    "openmeteo_horario":          "bronze.openmeteo_horario",
-    "openmeteo_historico":        "bronze.openmeteo_historico",
-    "nasa_power_horario":         "bronze.nasa_power_horario",
-    "recife_arboviroses":         "bronze.recife_arboviroses",
-    "recife_defesa_civil":        "bronze.recife_defesa_civil",
-    "sinan_animais_peconhentos":  "bronze.sinan_animais_peconhentos",
+    "inmet_estacoes":              "bronze.inmet_estacoes",
+    "openmeteo_horario":           "bronze.openmeteo_horario",
+    "openmeteo_historico":         "bronze.openmeteo_historico",
+    "nasa_power_horario":          "bronze.nasa_power_horario",
+    "recife_arboviroses":          "bronze.recife_arboviroses",
+    "recife_defesa_civil":         "bronze.recife_defesa_civil",
+    "sinan_animais_peconhentos":   "bronze.sinan_animais_peconhentos",
+    "recife_samu":                 "bronze.recife_samu",
+    "recife_acidentes_transito":   "bronze.recife_acidentes_transito",
 }
 
 

@@ -1,93 +1,95 @@
-"""Processador silver: bronze → silver.Meteorologia.
+"""Processador silver: bronze → silver.Meteorologia (PySpark).
 
-Unifica openmeteo_horario, openmeteo_historico e nasa_power_horario.
-Normaliza pressão para hPa (NASA POWER envia kPa; conversão × 10).
+Unifica openmeteo_horario, openmeteo_historico e nasa_power_horario via
+UNION ALL em Spark SQL com get_json_object. Usa UDF para parsear o timestamp
+BSON Extended JSON ({"$date": "..."}) presente nos payloads climáticos.
+NASA POWER envia pressão em kPa; a conversão ×10 fica no CASE WHEN do SQL.
 """
 
+import datetime
 import logging
-from datetime import datetime, timezone
 
-from silver.pipelines._base import _ler_bronze, _ts, _upsert
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import udf
+from pyspark.sql.types import TimestampType
+
+from silver.pipelines._base import _truncar
 
 logger = logging.getLogger(__name__)
 
-_MERGE_MET = """\
-MERGE silver.Meteorologia WITH (HOLDLOCK) AS tgt
-USING (VALUES (
-    ?, ?, ?,
-    CONVERT(datetimeoffset(6), ?),
-    ?, ?, ?, ?, ?, ?, ?, ?,
-    CONVERT(datetimeoffset(6), ?)
-)) AS src (fonte, estacao, territorio, lida_em, natureza_dado,
-           temperatura_c, precipitacao_mm, umidade_pct, pressao_hpa,
-           vento_ms, latitude, longitude, atualizado_em)
-ON tgt.fonte = src.fonte AND tgt.lida_em = src.lida_em
-WHEN NOT MATCHED THEN
-    INSERT (fonte, estacao, territorio, lida_em, natureza_dado,
-            temperatura_c, precipitacao_mm, umidade_pct, pressao_hpa,
-            vento_ms, latitude, longitude, atualizado_em)
-    VALUES (src.fonte, src.estacao, src.territorio, src.lida_em, src.natureza_dado,
-            src.temperatura_c, src.precipitacao_mm, src.umidade_pct, src.pressao_hpa,
-            src.vento_ms, src.latitude, src.longitude, src.atualizado_em)
-WHEN MATCHED THEN UPDATE SET
-    temperatura_c   = src.temperatura_c,
-    precipitacao_mm = src.precipitacao_mm,
-    umidade_pct     = src.umidade_pct,
-    pressao_hpa     = src.pressao_hpa,
-    vento_ms        = src.vento_ms,
-    atualizado_em   = src.atualizado_em;
-"""
+_TABELA = "silver.Meteorologia"
+_FONTES = [
+    "bronze.openmeteo_horario",
+    "bronze.openmeteo_historico",
+    "bronze.nasa_power_horario",
+]
 
 
-def _linha_meteorologia(p: dict, agora: str) -> tuple | None:
-    """Extrai e normaliza os campos de um payload de meteorologia.
-
-    NASA POWER envia pressão em kPa; multiplica por 10 para converter para hPa.
-    Retorna None se fonte ou lida_em estiverem ausentes (campos da chave de negócio).
-    """
-    variaveis = p.get("variaveis") or {}
-    lida_em   = _ts(p.get("lida_em"))
-    fonte     = p.get("fonte") or ""
-
-    if not lida_em or not fonte:
+@udf(returnType=TimestampType())
+def _parse_bson_ts(json_str: str):
+    """Extrai datetime de BSON Extended JSON: {"$date": "2026-11-15T12:00:00+00:00"}."""
+    if not json_str:
         return None
-
-    pressao = variaveis.get("pressao_hpa")
-    if pressao is None and variaveis.get("pressao_kpa") is not None:
-        pressao = variaveis["pressao_kpa"] * 10
-
-    return (
-        fonte,
-        p.get("estacao") or "",
-        p.get("territorio") or "Recife",
-        lida_em,
-        p.get("natureza_dado"),
-        variaveis.get("temperatura_c"),
-        variaveis.get("precipitacao_mm"),
-        variaveis.get("umidade_pct"),
-        pressao,
-        variaveis.get("vento_ms"),
-        p.get("latitude"),
-        p.get("longitude"),
-        agora,
-    )
+    try:
+        from bson import json_util
+        obj = json_util.loads(json_str)
+        if isinstance(obj, datetime.datetime):
+            if obj.tzinfo is not None:
+                return obj.astimezone(datetime.timezone.utc).replace(tzinfo=None)
+            return obj
+    except Exception:
+        pass
+    return None
 
 
-def processar_meteorologia(connection) -> dict:
+def processar_meteorologia(
+    spark: SparkSession, connection, jdbc_url: str, jdbc_props: dict
+) -> dict:
     """Lê as três fontes climáticas do bronze e persiste em silver.Meteorologia."""
-    agora = datetime.now(timezone.utc).isoformat()
-    tabelas = [
-        "bronze.openmeteo_horario",
-        "bronze.openmeteo_historico",
-        "bronze.nasa_power_horario",
-    ]
-    params = []
-    for tabela in tabelas:
-        for p in _ler_bronze(connection, tabela):
-            linha = _linha_meteorologia(p, agora)
-            if linha:
-                params.append(linha)
+    spark.udf.register("parse_bson_ts", _parse_bson_ts)
 
-    inseridos = _upsert(connection, "silver.Meteorologia", _MERGE_MET, params)
-    logger.info("silver.Meteorologia: %d linhas processadas", inseridos)
-    return {"tabela": "silver.Meteorologia", "processados": inseridos}
+    frames = [
+        spark.read.jdbc(
+            url=jdbc_url,
+            table=f"(SELECT payload_json FROM {t} WHERE payload_json IS NOT NULL) t",
+            properties=jdbc_props,
+        )
+        for t in _FONTES
+    ]
+    df_raw = frames[0].union(frames[1]).union(frames[2])
+    df_raw.createOrReplaceTempView("_brnz_met")
+
+    df = spark.sql("""
+        WITH raw AS (
+            SELECT
+                get_json_object(payload_json, '$.fonte')                              AS fonte,
+                COALESCE(get_json_object(payload_json, '$.estacao'), '')              AS estacao,
+                COALESCE(get_json_object(payload_json, '$.territorio'), 'Recife')    AS territorio,
+                parse_bson_ts(get_json_object(payload_json, '$.lida_em'))             AS lida_em,
+                get_json_object(payload_json, '$.natureza_dado')                      AS natureza_dado,
+                CAST(get_json_object(payload_json, '$.variaveis.temperatura_c')   AS DOUBLE) AS temperatura_c,
+                CAST(get_json_object(payload_json, '$.variaveis.precipitacao_mm') AS DOUBLE) AS precipitacao_mm,
+                CAST(get_json_object(payload_json, '$.variaveis.umidade_pct')     AS DOUBLE) AS umidade_pct,
+                CASE
+                    WHEN get_json_object(payload_json, '$.variaveis.pressao_hpa') IS NOT NULL
+                        THEN CAST(get_json_object(payload_json, '$.variaveis.pressao_hpa') AS DOUBLE)
+                    ELSE CAST(get_json_object(payload_json, '$.variaveis.pressao_kpa') AS DOUBLE) * 10
+                END                                                                   AS pressao_hpa,
+                CAST(get_json_object(payload_json, '$.variaveis.vento_ms')        AS DOUBLE) AS vento_ms,
+                CAST(get_json_object(payload_json, '$.latitude')                  AS DOUBLE) AS latitude,
+                CAST(get_json_object(payload_json, '$.longitude')                 AS DOUBLE) AS longitude,
+                current_timestamp()                                                   AS atualizado_em
+            FROM _brnz_met
+        )
+        SELECT fonte, estacao, territorio, lida_em, natureza_dado,
+               temperatura_c, precipitacao_mm, umidade_pct, pressao_hpa,
+               vento_ms, latitude, longitude, atualizado_em
+        FROM raw
+        WHERE fonte IS NOT NULL AND lida_em IS NOT NULL
+    """)
+
+    total = df.count()
+    _truncar(connection, _TABELA)
+    df.write.jdbc(url=jdbc_url, table=_TABELA, mode="append", properties=jdbc_props)
+    logger.info("%s: %d linhas processadas", _TABELA, total)
+    return {"tabela": _TABELA, "processados": total}

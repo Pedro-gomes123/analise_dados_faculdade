@@ -3,3 +3,4 @@ azure-identity
 python-dotenv
 pyarrow
 azure-storage-blob
+pyspark

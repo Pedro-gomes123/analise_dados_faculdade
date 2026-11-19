@@ -1,44 +1,47 @@
-"""Processador silver: bronze.sinan_animais_peconhentos → silver.AnimaisPerconhentos."""
+"""Processador silver: bronze.sinan_animais_peconhentos → silver.AnimaisPerconhentos (PySpark)."""
 
 import logging
-from datetime import datetime, timezone
 
-from silver.pipelines._base import _ler_bronze, _upsert
+from pyspark.sql import SparkSession
+
+from silver.pipelines._base import _truncar
 
 logger = logging.getLogger(__name__)
 
-_MERGE_ANI = """\
-MERGE silver.AnimaisPerconhentos WITH (HOLDLOCK) AS tgt
-USING (VALUES (?, ?, ?, ?, ?, CONVERT(datetimeoffset(6), ?))) AS src
-    (territorio, municipio, codigo_municipio, periodo, casos, atualizado_em)
-ON  tgt.territorio       = src.territorio
-AND tgt.municipio        = src.municipio
-AND tgt.codigo_municipio = src.codigo_municipio
-AND tgt.periodo          = src.periodo
-WHEN NOT MATCHED THEN
-    INSERT (territorio, municipio, codigo_municipio, periodo, casos, atualizado_em)
-    VALUES (src.territorio, src.municipio, src.codigo_municipio, src.periodo, src.casos, src.atualizado_em)
-WHEN MATCHED THEN UPDATE SET casos = src.casos, atualizado_em = src.atualizado_em;
-"""
+_TABELA = "silver.AnimaisPerconhentos"
 
 
-def processar_animais_peconhentos(connection) -> dict:
+def processar_animais_peconhentos(
+    spark: SparkSession, connection, jdbc_url: str, jdbc_props: dict
+) -> dict:
     """Transforma acidentes SINAN do bronze para silver.AnimaisPerconhentos."""
-    agora = datetime.now(timezone.utc).isoformat()
-    params = []
-    for p in _ler_bronze(connection, "bronze.sinan_animais_peconhentos"):
-        periodo = p.get("periodo") or ""
-        if not periodo:
-            continue
-        params.append((
-            p.get("territorio") or "Pernambuco",
-            p.get("municipio") or "nao_informado",
-            p.get("codigo_municipio") or "nao_informado",
-            periodo,
-            int(p.get("valor") or 0),
-            agora,
-        ))
+    df_raw = spark.read.jdbc(
+        url=jdbc_url,
+        table="(SELECT payload_json FROM bronze.sinan_animais_peconhentos WHERE payload_json IS NOT NULL) t",
+        properties=jdbc_props,
+    )
+    df_raw.createOrReplaceTempView("_brnz_ani")
 
-    inseridos = _upsert(connection, "silver.AnimaisPerconhentos", _MERGE_ANI, params)
-    logger.info("silver.AnimaisPerconhentos: %d linhas processadas", inseridos)
-    return {"tabela": "silver.AnimaisPerconhentos", "processados": inseridos}
+    df = spark.sql("""
+        WITH raw AS (
+            SELECT
+                LOWER(COALESCE(get_json_object(payload_json, '$.territorio'), 'Pernambuco'))         AS territorio,
+                LOWER(COALESCE(get_json_object(payload_json, '$.municipio'), 'nao_informado'))         AS municipio,
+                LOWER(COALESCE(get_json_object(payload_json, '$.codigo_municipio'), 'nao_informado'))  AS codigo_municipio,
+                get_json_object(payload_json, '$.periodo')                                             AS periodo,
+                CAST(COALESCE(get_json_object(payload_json, '$.valor'), '0') AS INT)                   AS casos
+            FROM _brnz_ani
+            WHERE get_json_object(payload_json, '$.periodo') IS NOT NULL
+        )
+        SELECT territorio, municipio, codigo_municipio, periodo,
+               MAX(casos) AS casos,
+               current_timestamp() AS atualizado_em
+        FROM raw
+        GROUP BY territorio, municipio, codigo_municipio, periodo
+    """)
+
+    total = df.count()
+    _truncar(connection, _TABELA)
+    df.write.jdbc(url=jdbc_url, table=_TABELA, mode="append", properties=jdbc_props)
+    logger.info("%s: %d linhas processadas", _TABELA, total)
+    return {"tabela": _TABELA, "processados": total}

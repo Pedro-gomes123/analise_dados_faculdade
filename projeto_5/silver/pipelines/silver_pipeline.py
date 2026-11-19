@@ -1,7 +1,10 @@
-"""Orquestrador da pipeline silver: coordena todos os processadores.
+"""Orquestrador da pipeline silver: coordena todos os processadores PySpark.
 
-Cada processador vive em seu próprio módulo dentro de silver/pipelines/.
-Este arquivo apenas importa, lista e executa em sequência, isolando falhas.
+Cada processador recebe (spark, connection, jdbc_url, jdbc_props):
+  - spark      → SparkSession local para leitura/transformação/escrita via JDBC
+  - connection → pyodbc para DDL e TRUNCATE antes de cada carga
+  - jdbc_url   → URL JDBC do SQL Server
+  - jdbc_props → dict com user/password/driver JDBC
 """
 
 import logging
@@ -18,7 +21,11 @@ from silver.pipelines.estacoes import processar_estacoes
 logger = logging.getLogger(__name__)
 
 
-def silver_pipeline(connection=None, aplicar_ddl: bool = True) -> list[dict]:
+def silver_pipeline(
+    connection=None,
+    spark=None,
+    aplicar_ddl: bool = True,
+) -> list[dict]:
     """Executa todos os processadores bronze → silver em sequência.
 
     Falha em um processador não interrompe os demais — cada um roda
@@ -26,16 +33,24 @@ def silver_pipeline(connection=None, aplicar_ddl: bool = True) -> list[dict]:
 
     Args:
         connection: Conexão pyodbc pré-existente; se None, abre automaticamente.
+        spark:      SparkSession pré-existente; se None, cria automaticamente.
         aplicar_ddl: Se True, executa o DDL silver antes de processar.
 
     Returns:
         Lista de dicts com "tabela", "processados" e opcionalmente "erro".
     """
     from silver.database.sql_server import conectar_sql_server
+    from silver.spark_session import criar_spark_session, jdbc_url_e_props
 
-    owns = connection is None
-    if owns:
+    owns_conn  = connection is None
+    owns_spark = spark is None
+
+    if owns_conn:
         connection = conectar_sql_server()
+    if owns_spark:
+        spark = criar_spark_session()
+
+    jdbc_url, jdbc_props = jdbc_url_e_props()
 
     try:
         if aplicar_ddl:
@@ -50,12 +65,17 @@ def silver_pipeline(connection=None, aplicar_ddl: bool = True) -> list[dict]:
             processar_acidentes_transito,
             processar_estacoes,
         ]
+
         resultados = []
         for fn in fontes:
             try:
-                resultados.append(fn(connection))
+                resultados.append(fn(spark, connection, jdbc_url, jdbc_props))
             except Exception as erro:
-                logger.error("Falha em %s: %s", getattr(fn, "__name__", repr(fn)), type(erro).__name__)
+                logger.error(
+                    "Falha em %s: %s",
+                    getattr(fn, "__name__", repr(fn)),
+                    type(erro).__name__,
+                )
                 resultados.append({
                     "tabela":      getattr(fn, "__name__", repr(fn)),
                     "processados": 0,
@@ -66,5 +86,7 @@ def silver_pipeline(connection=None, aplicar_ddl: bool = True) -> list[dict]:
         logger.info("Pipeline Silver concluído: %d linhas no total", total)
         return resultados
     finally:
-        if owns:
+        if owns_conn:
             connection.close()
+        if owns_spark:
+            spark.stop()

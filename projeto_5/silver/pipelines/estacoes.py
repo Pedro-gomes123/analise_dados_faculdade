@@ -1,78 +1,72 @@
-"""Processador silver: bronze.inmet_estacoes → silver.Estacoes."""
+"""Processador silver: bronze.inmet_estacoes → silver.Estacoes (PySpark).
+
+Suporta dois formatos de payload: normalizado (estacao, latitude) e
+bruto INMET (CD_ESTACAO, VL_LATITUDE). O COALESCE cobre ambos.
+"""
 
 import logging
-from datetime import datetime, timezone
 
-from silver.pipelines._base import _ler_bronze, _upsert
+from pyspark.sql import SparkSession
+
+from silver.pipelines._base import _truncar
 
 logger = logging.getLogger(__name__)
 
-_MERGE_EST = """\
-MERGE silver.Estacoes WITH (HOLDLOCK) AS tgt
-USING (VALUES (?, ?, ?, ?, ?, ?, ?, CONVERT(datetimeoffset(6), ?))) AS src
-    (fonte, estacao, nome, municipio, latitude, longitude, situacao, atualizado_em)
-ON  tgt.fonte   = src.fonte
-AND tgt.estacao = src.estacao
-WHEN NOT MATCHED THEN
-    INSERT (fonte, estacao, nome, municipio, latitude, longitude, situacao, atualizado_em)
-    VALUES (src.fonte, src.estacao, src.nome, src.municipio, src.latitude, src.longitude,
-            src.situacao, src.atualizado_em)
-WHEN MATCHED THEN UPDATE SET
-    nome          = src.nome,
-    municipio     = src.municipio,
-    latitude      = src.latitude,
-    longitude     = src.longitude,
-    situacao      = src.situacao,
-    atualizado_em = src.atualizado_em;
-"""
+_TABELA = "silver.Estacoes"
 
 
-def _para_float(valor) -> float | None:
-    """Converte string ou número para float.
+def processar_estacoes(
+    spark: SparkSession, connection, jdbc_url: str, jdbc_props: dict
+) -> dict:
+    """Transforma metadados de estações INMET do bronze para silver.Estacoes."""
+    df_raw = spark.read.jdbc(
+        url=jdbc_url,
+        table="(SELECT payload_json FROM bronze.inmet_estacoes WHERE payload_json IS NOT NULL) t",
+        properties=jdbc_props,
+    )
+    df_raw.createOrReplaceTempView("_brnz_est")
 
-    Necessário porque payloads brutos do INMET têm VL_LATITUDE como string.
-    """
-    if valor is None:
-        return None
-    try:
-        return float(valor)
-    except (ValueError, TypeError):
-        return None
-
-
-def processar_estacoes(connection) -> dict:
-    """Transforma metadados de estações INMET do bronze para silver.Estacoes.
-
-    Suporta dois formatos de payload: normalizado (estacao, latitude) e
-    bruto INMET (CD_ESTACAO, VL_LATITUDE). A cadeia de `or` cobre ambos.
-    """
-    agora = datetime.now(timezone.utc).isoformat()
-    params = []
-    for p in _ler_bronze(connection, "bronze.inmet_estacoes"):
-        estacao = p.get("estacao") or p.get("CD_ESTACAO") or p.get("CD_WSI") or ""
-        if not estacao:
-            continue
-        nome = p.get("nome") or p.get("DC_NOME")
-        municipio = (
-            p.get("municipio")
-            or p.get("NM_MUNICIPIO")
-            or p.get("DC_MUNICIPIO")
-            or p.get("SG_ESTADO")
+    df = spark.sql("""
+        WITH raw AS (
+            SELECT
+                COALESCE(get_json_object(payload_json, '$.fonte'), 'inmet')             AS fonte,
+                COALESCE(
+                    get_json_object(payload_json, '$.estacao'),
+                    get_json_object(payload_json, '$.CD_ESTACAO'),
+                    get_json_object(payload_json, '$.CD_WSI')
+                )                                                                        AS estacao,
+                COALESCE(
+                    get_json_object(payload_json, '$.nome'),
+                    get_json_object(payload_json, '$.DC_NOME')
+                )                                                                        AS nome,
+                COALESCE(
+                    get_json_object(payload_json, '$.municipio'),
+                    get_json_object(payload_json, '$.NM_MUNICIPIO'),
+                    get_json_object(payload_json, '$.DC_MUNICIPIO'),
+                    get_json_object(payload_json, '$.SG_ESTADO')
+                )                                                                        AS municipio,
+                CAST(COALESCE(
+                    get_json_object(payload_json, '$.latitude'),
+                    get_json_object(payload_json, '$.VL_LATITUDE')
+                ) AS DOUBLE)                                                             AS latitude,
+                CAST(COALESCE(
+                    get_json_object(payload_json, '$.longitude'),
+                    get_json_object(payload_json, '$.VL_LONGITUDE')
+                ) AS DOUBLE)                                                             AS longitude,
+                COALESCE(
+                    get_json_object(payload_json, '$.situacao'),
+                    get_json_object(payload_json, '$.CD_SITUACAO')
+                )                                                                        AS situacao,
+                current_timestamp()                                                      AS atualizado_em
+            FROM _brnz_est
         )
-        lat = _para_float(p.get("latitude") or p.get("VL_LATITUDE"))
-        lon = _para_float(p.get("longitude") or p.get("VL_LONGITUDE"))
-        situacao = p.get("situacao") or p.get("CD_SITUACAO")
-        params.append((
-            p.get("fonte") or "inmet",
-            estacao,
-            nome,
-            municipio,
-            lat,
-            lon,
-            situacao,
-            agora,
-        ))
+        SELECT fonte, estacao, nome, municipio, latitude, longitude, situacao, atualizado_em
+        FROM raw
+        WHERE estacao IS NOT NULL
+    """)
 
-    inseridos = _upsert(connection, "silver.Estacoes", _MERGE_EST, params)
-    logger.info("silver.Estacoes: %d linhas processadas", inseridos)
-    return {"tabela": "silver.Estacoes", "processados": inseridos}
+    total = df.count()
+    _truncar(connection, _TABELA)
+    df.write.jdbc(url=jdbc_url, table=_TABELA, mode="append", properties=jdbc_props)
+    logger.info("%s: %d linhas processadas", _TABELA, total)
+    return {"tabela": _TABELA, "processados": total}
